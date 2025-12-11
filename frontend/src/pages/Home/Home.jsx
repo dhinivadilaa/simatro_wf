@@ -1,6 +1,6 @@
 // --- File: src/pages/Home/Home.jsx ---
 
-import "./Home.css";
+// Styling migrated to Tailwind — remove separate CSS file
 import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import api from "../../api/axios";
@@ -28,71 +28,49 @@ export default function Home() {
             });
     }, []);
 
-    /**
-     * Fungsi untuk mendapatkan kelas CSS spesifik (warna) untuk tag kategori.
-     */
-    const getTagClass = (category) => {
-        // Gunakan lower case untuk penyesuaian yang lebih aman
-        const lowerCategory = category ? category.toLowerCase() : '';
-        if (lowerCategory.includes('elektro')) {
-            return 'tag-elektro'; // Biru
-        }
-        if (lowerCategory.includes('workshop') || lowerCategory.includes('kolokium')) {
-            return 'tag-workshop'; // Ungu
-        }
-        return '';
-    };
+    // Tag color handled inline with Tailwind classes
 
-    if (loading) {
-        return <div className="loading">Loading...</div>;
-    }
+    if (loading) return <div className="p-8">Loading...</div>;
 
     return (
-        <div className="home-container">
+        <div className="bg-gray-50 min-h-screen">
+            <Header adminLink="/admin/login" />
 
-            {/* HEADER DARI KOMPONEN (Asumsikan Header sudah dapat menampilkan link ke /admin/login) */}
-            <Header adminLink="/admin/login" /> 
+            <div className="max-w-6xl mx-auto px-6 py-10">
+                <h1 className="text-3xl font-bold text-[#0d1b2a] mb-2">Daftar Acara Jurusan Teknik Elektro</h1>
+                <p className="text-base text-gray-600 mb-6">Temukan Acara di Teknik Elektro hanya di SIMATRO</p>
 
-            <div className="content">
-                <h1 className="title">Daftar Acara Jurusan Teknik Elektro</h1>
-                <p className="subtitle">
-                    Temukan Acara di Teknik Elektro hanya di SIMATRO
-                </p>
-                {/* Garis pemisah kuning telah diimplementasikan melalui CSS pseudo-element pada class .subtitle */}
-
-                <div className="event-list">
+                <div className="flex flex-wrap gap-6">
                     {events.map((event) => {
                         const isClosed = !event.registration_open;
-                        const cardClassName = `event-card ${isClosed ? 'card-closed' : ''}`;
-                        const tagClassName = `event-tag ${getTagClass(event.category)}`;
+
+                        const tagClasses = event.category && event.category.toLowerCase().includes('elektro')
+                            ? 'bg-blue-100 text-blue-700'
+                            : event.category && (event.category.toLowerCase().includes('workshop') || event.category.toLowerCase().includes('kolokium'))
+                                ? 'bg-purple-100 text-purple-700'
+                                : 'bg-gray-100 text-gray-700';
 
                         return (
-                            <Link 
-                                to={isClosed ? '#' : `/events/${event.id}`} 
-                                key={event.id} 
-                                className={cardClassName}
-                                style={{ pointerEvents: isClosed ? 'none' : 'auto', textDecoration: 'none' }}
+                            <Link
+                                to={isClosed ? '#' : `/events/${event.id}`}
+                                key={event.id}
+                                className={`w-72 bg-white rounded-xl p-5 shadow hover:shadow-lg transform hover:-translate-y-1 transition-all ${isClosed ? 'opacity-80 cursor-not-allowed' : ''}`}
+                                style={{ textDecoration: 'none' }}
                             >
-                                <span className={tagClassName}>{event.category}</span>
+                                <span className={`inline-block px-3 py-1 rounded-md text-sm font-medium mb-3 ${tagClasses}`}>{event.category}</span>
 
-                                <h3 className="event-title">{event.title}</h3>
-                                
+                                <h3 className="text-lg font-semibold text-[#0d1b2a] mb-2">{event.title}</h3>
+
                                 {isClosed ? (
-                                    // Tampilkan status "Pendaftaran Ditutup" sebagai topik/status jika ditutup
-                                    <p className="event-topic">Status: Pendaftaran Ditutup</p>
+                                    <p className="text-sm text-gray-500 mb-4">Status: Pendaftaran Ditutup</p>
                                 ) : (
-                                    // Tampilkan topik normal jika terbuka
-                                    <p className="event-topic">Topik: {event.topic}</p>
+                                    <p className="text-sm text-gray-500 mb-4">Topik: {event.topic}</p>
                                 )}
 
                                 {isClosed ? (
-                                    <button className="btn-closed" disabled>
-                                        Pendaftaran Ditutup
-                                    </button>
+                                    <button className="w-full bg-gray-400 text-white py-2 rounded font-bold text-sm" disabled>Pendaftaran Ditutup</button>
                                 ) : (
-                                    <span className="btn-detail">
-                                        Lihat Detail Acara
-                                    </span>
+                                    <span className="w-full inline-block bg-yellow-400 text-[#0d1b2a] text-center py-2 rounded font-bold">Lihat Detail Acara</span>
                                 )}
                             </Link>
                         );
@@ -100,7 +78,6 @@ export default function Home() {
                 </div>
             </div>
 
-            {/* FOOTER DARI KOMPONEN */}
             <Footer />
         </div>
     );

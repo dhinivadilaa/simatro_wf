@@ -1,7 +1,6 @@
 // --- File: src/pages/Riwayat/Riwayat.jsx ---
 
 import React, { useState, useEffect } from 'react';
-import './Riwayat.css';
 import { useNavigate } from 'react-router-dom';
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
@@ -118,24 +117,19 @@ export default function Riwayat() {
 
 
     return (
-        <div className="riwayat-page">
-            <Header /> 
-            
-            <div className="riwayat-container">
-                <div className="riwayat-header-info">
-                    <button onClick={handleBack} className="back-link">
-                        &larr; Kembali ke Detail Acara
-                    </button>
-                    
-                    <h1 className="riwayat-title">Dashboard Peserta SIMATRO</h1>
-                    <p className="user-greeting">
-                        Selamat datang, **{userName}**. Riwayat partisipasi Anda:
-                    </p>
+        <div className="min-h-screen bg-gray-50">
+            <Header />
+
+            <div className="max-w-4xl mx-auto px-4 py-10">
+                <div className="mb-6">
+                    <button onClick={handleBack} className="text-sm text-gray-500 hover:text-gray-700 mb-3">&larr; Kembali ke Detail Acara</button>
+                    <h1 className="text-2xl font-semibold text-gray-900">Dashboard Peserta SIMATRO</h1>
+                    <p className="text-gray-600">Selamat datang, <span className="font-medium">{userName}</span>. Riwayat partisipasi Anda:</p>
                 </div>
 
-                {error && <p className="riwayat-error">{error}</p>}
-                
-                <div className="riwayat-list">
+                {error && <p className="text-red-600 mb-4">{error}</p>}
+
+                <div className="space-y-4">
                     {loading ? (
                         <p>Memuat riwayat acara...</p>
                     ) : (
@@ -143,37 +137,24 @@ export default function Riwayat() {
                             const status = getEventStatus(event);
 
                             return (
-                                <div key={event.id} className="event-card">
-                                    <div className="event-info">
-                                        <span className={`event-tipe event-tipe-${event.tipe.toLowerCase().replace(/\s/g, '-')}`}>
-                                            {event.tipe}
-                                        </span>
-                                        <h2 className="event-name">{event.nama}</h2>
-                                        <p className="event-kode">Kode Registrasi: {event.kode_registrasi}</p>
+                                <div key={event.id} className="bg-white border border-gray-200 rounded-lg p-4 flex items-center justify-between shadow-sm">
+                                    <div className="flex-1 pr-4">
+                                        <span className={`inline-block px-3 py-1 rounded text-xs font-semibold mb-2 ${event.tipe && event.tipe.toLowerCase().includes('seminar') ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-100 text-gray-700'}`}>{event.tipe}</span>
+                                        <h2 className="text-lg font-semibold text-gray-900">{event.nama}</h2>
+                                        <p className="text-sm text-gray-500">Kode Registrasi: {event.kode_registrasi}</p>
                                     </div>
-                                    
-                                    <div className="event-status">
-                                        <div className="status-kehadiran">
-                                            <p className="status-label">Status Kehadiran</p>
-                                            {/* STATUS KEHADIRAN BERDASARKAN attendance_id */}
-                                            <span className={`status-badge status-${status.statusKehadiran.toLowerCase()}`}>
-                                                {status.statusKehadiran} 
-                                                {status.checkInTime !== 'N/A' && ` (${status.checkInTime} WIB)`}
-                                            </span>
+
+                                    <div className="flex flex-col items-end gap-3">
+                                        <div className="text-sm text-gray-600">Status Kehadiran</div>
+                                        <div className={`text-base font-bold ${status.isHadir ? 'text-green-600' : 'text-orange-600'}`}>
+                                            {status.statusKehadiran}{status.checkInTime !== 'N/A' && ` (${status.checkInTime} WIB)`}
                                         </div>
-                                        
-                                        <div className="event-actions">
+
+                                        <div>
                                             {status.sertifikatAksi === 'Lihat Sertifikat' ? (
-                                                <button 
-                                                    className="btn-lihat-sertifikat"
-                                                    onClick={() => handleSertifikatClick(event.certificate.file_path)}
-                                                >
-                                                    {status.sertifikatAksi}
-                                                </button>
+                                                <button onClick={() => handleSertifikatClick(event.certificate.file_path)} className="bg-[#112d4e] text-white px-3 py-2 rounded-md text-sm">{status.sertifikatAksi}</button>
                                             ) : (
-                                                <span className={`status-keterangan status-${status.sertifikatAksi.replace(/\s/g, '-').toLowerCase()}`}>
-                                                    {status.sertifikatAksi}
-                                                </span>
+                                                <span className="text-sm text-gray-600">{status.sertifikatAksi}</span>
                                             )}
                                         </div>
                                     </div>
@@ -183,7 +164,7 @@ export default function Riwayat() {
                     )}
                 </div>
             </div>
-            
+
             <Footer />
         </div>
     );

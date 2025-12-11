@@ -5,7 +5,6 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import api from "../../../api/axios";
 import Header from "../../../components/Header";
 import Footer from "../../../components/Footer";
-import "./EventDetail.css";
 
 export default function EventDetail() {
     const { id } = useParams();
@@ -27,7 +26,7 @@ export default function EventDetail() {
     };
 
     if (!event) {
-        return <p className="loading-text">Loading...</p>;
+        return <p className="p-6">Loading...</p>;
     }
 
     // --- Fungsi Bantuan ---
@@ -37,144 +36,76 @@ export default function EventDetail() {
 
 
     return (
-        <div className="event-detail-page">
-
+        <div className="min-h-screen bg-gray-50">
             <Header />
 
-            <div className="content-wrapper">
+            <div className="max-w-5xl mx-auto px-4 py-10">
+                <button className="text-sm text-blue-600 mb-4" onClick={() => navigate('/')}>← Kembali ke Daftar Acara</button>
 
-                {/* Tombol Kembali */}
-                <button className="back-btn" onClick={() => navigate("/")}>
-                    ← Kembali ke Daftar Acara
-                </button>
+                <div className="bg-white rounded-2xl p-8 shadow">
+                    <h1 className="text-2xl font-bold text-gray-900">{event.title}</h1>
+                    <div className="h-1 bg-yellow-400 w-full my-4 rounded"></div>
 
-                {/* Event Card */}
-                <div className="event-card">
+                    <h2 className="text-lg font-semibold text-gray-800 mt-4">Materi dan Informasi Acara</h2>
 
-                    <h1 className="event-title">{event.title}</h1>
-
-                    <div className="divider"></div>
-
-                    <h2 className="section-title">Materi dan Informasi Acara</h2>
-
-                    {/* INFO GRID (Tidak ada perubahan) */}
-                    <div className="info-grid">
-                        {/* ... (Waktu Pelaksanaan, Lokasi Acara, Kuota Peserta) ... */}
-                        
-                        <div className="info-box">
-                            <span className="info-label">
-                                {/* Ikon Waktu */}
-                                <i className="fas fa-calendar-alt"></i> Waktu Pelaksanaan
-                            </span>
-                            <p className="info-value">{event.date}</p>
-                            <p className="info-sub">{event.time}</p>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 my-4">
+                        <div className="bg-gray-100 rounded-lg p-4">
+                            <div className="text-sm text-gray-600 flex items-center gap-2"><span>📅</span> Waktu Pelaksanaan</div>
+                            <p className="font-semibold text-gray-800 mt-1">{event.date}</p>
+                            <p className="text-sm text-gray-600">{event.time}</p>
                         </div>
 
-                        <div className="info-box">
-                            <span className="info-label">
-                                {/* Ikon Lokasi */}
-                                <i className="fas fa-map-marker-alt"></i> Lokasi Acara
-                            </span>
-                            <p className="info-value">{event.location}</p>
+                        <div className="bg-gray-100 rounded-lg p-4">
+                            <div className="text-sm text-gray-600 flex items-center gap-2"><span>📍</span> Lokasi Acara</div>
+                            <p className="font-semibold text-gray-800 mt-1">{event.location}</p>
                         </div>
 
-                        <div className="info-box">
-                            <span className="info-label">
-                                {/* Ikon Kuota */}
-                                <i className="fas fa-users"></i> Kuota Peserta
-                            </span>
-                            <p className="info-value">
-                                {event.registered} / {event.quota}
-                                <span className="info-green">
-                                    {" "}
-                                    ({event.quota - event.registered} tersisa)
-                                </span>
-                            </p>
+                        <div className="bg-gray-100 rounded-lg p-4">
+                            <div className="text-sm text-gray-600 flex items-center gap-2"><span>👥</span> Kuota Peserta</div>
+                            <p className="font-semibold text-gray-800 mt-1">{event.registered} / {event.quota} <span className="text-green-600">({event.quota - event.registered} tersisa)</span></p>
                         </div>
                     </div>
 
-                    {/* MATERIALS (Tidak ada perubahan) */}
-                    <h2 className="section-title">Materi Acara</h2>
+                    <h2 className="text-lg font-semibold text-gray-800 mt-6">Materi Acara</h2>
                     {event.materials && event.materials.length > 0 ? (
                         event.materials.map((item) => (
-                            <div key={item.id} className="material-item">
-                                <div className="material-content">
-                                    <div>
-                                        <p className="material-title">{item.title}</p>
-                                        <p className="material-desc">{item.description}</p>
-                                        <span className="material-preview">Pratinjau Teks</span>
-                                    </div>
+                            <div key={item.id} className="flex justify-between items-start bg-white border mt-3 p-4 rounded-lg">
+                                <div>
+                                    <p className="font-semibold text-gray-800">{item.title}</p>
+                                    <p className="text-sm text-gray-600">{item.description}</p>
+                                    <span className="text-xs text-gray-500">Pratinjau Teks</span>
                                 </div>
 
-                                <a href={item.file_url} target="_blank" className="btn-view" rel="noreferrer">
-                                    👁 Lihat
-                                </a>
+                                <a href={item.file_url} target="_blank" className="bg-[#122348] text-white px-3 py-2 rounded-md" rel="noreferrer">👁 Lihat</a>
                             </div>
                         ))
                     ) : (
-                        <p className="no-material">Belum ada materi tersedia untuk acara ini.</p>
+                        <p className="text-sm text-gray-600 mt-3">Belum ada materi tersedia untuk acara ini.</p>
                     )}
 
-
-                    {/* ACTION GRID */}
-                    <div className="action-grid">
-
-                        {/* Pendaftaran (Tidak ada perubahan) */}
-                        <div className="action-box green-box" 
-                            onClick={() => navigate(`/events/${id}/register`)}>
-                            <h3>Pendaftaran</h3>
-                            <p>Jika Berminat, Silahkan Daftar disini</p>
-                            <button
-                                className="btn-green"
-                                onClick={(e) => {
-                                    e.stopPropagation(); 
-                                    navigate(`/events/${id}/register`);
-                                }}
-                            >
-                                Daftar Sekarang
-                            </button>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+                        <div onClick={() => navigate(`/events/${id}/register`)} className="p-4 rounded-xl bg-green-50 border border-green-200 cursor-pointer">
+                            <h3 className="font-semibold">Pendaftaran</h3>
+                            <p className="text-sm text-gray-600">Jika Berminat, Silahkan Daftar disini</p>
+                            <button className="mt-3 w-full bg-green-600 text-white py-2 rounded">Daftar Sekarang</button>
                         </div>
 
-                        {/* Absensi & Status (Asumsi menuju halaman Cek Status) */}
-                        <div className="action-box blue-box"
-                            onClick={() => navigate("/status")}>
-                            <h3>Absensi & Status</h3>
-                            <p>Cek status absensi dan sertifikat</p>
-                            <button 
-                                className="btn-blue"
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    navigate("/status");
-                                }}
-                            >
-                                Cek Status & Absen
-                            </button>
+                        <div onClick={() => navigate('/status')} className="p-4 rounded-xl bg-blue-50 border border-blue-200 cursor-pointer">
+                            <h3 className="font-semibold">Absensi & Status</h3>
+                            <p className="text-sm text-gray-600">Cek status absensi dan sertifikat</p>
+                            <button className="mt-3 w-full bg-blue-600 text-white py-2 rounded">Cek Status & Absen</button>
                         </div>
 
-                        {/* Riwayat Event (PERBAIKAN: Mengarah ke /riwayat) */}
-                        <div className="action-box yellow-box"
-                            onClick={() => navigate("/Riwayat")}> {/* ⬅️ UBAH DARI /history KE /riwayat */}
-                            <h3>Riwayat Event</h3>
-                            <p>Lihat riwayat dan sertifikat</p>
-                            <button 
-                                className="btn-yellow"
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    navigate("/Riwayat"); // ⬅️ UBAH DARI /history KE /riwayat
-                                }}
-                            >
-                                Lihat Riwayat
-                            </button>
+                        <div onClick={() => navigate('/Riwayat')} className="p-4 rounded-xl bg-yellow-50 border border-yellow-200 cursor-pointer">
+                            <h3 className="font-semibold">Riwayat Event</h3>
+                            <p className="text-sm text-gray-600">Lihat riwayat dan sertifikat</p>
+                            <button className="mt-3 w-full bg-yellow-500 text-white py-2 rounded">Lihat Riwayat</button>
                         </div>
-
                     </div>
-
                 </div>
             </div>
 
-            {/* FOOTER DARI KOMPONEN */}
             <Footer />
-            
         </div>
     );
 }

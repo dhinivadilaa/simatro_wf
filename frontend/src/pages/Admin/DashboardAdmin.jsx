@@ -2,64 +2,45 @@ import React, { useEffect, useState } from "react";
 import api from "../../api/axios";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
-import "./DashboardAdmin.css";
 import { Link } from "react-router-dom";
 
 // Component untuk satu kartu acara di Dashboard
-const EventCardAdmin = ({ event }) => {
-    // Tentukan status visual dan warna berdasarkan status pendaftaran
+    const EventCardAdmin = ({ event }) => {
     const isPublished = event.status === 'Aktif & Publik';
-    const cardClass = `event-admin-card ${isPublished ? 'published' : 'draft'}`;
+    const borderLeftClass = isPublished ? 'border-l-4 border-l-green-500' : 'border-l-4 border-l-yellow-400 bg-yellow-50';
     const statusText = isPublished ? event.status : `Draft (Publikasi Tertunda)`;
-    const statusLabelClass = isPublished ? 'status-active' : 'status-draft';
 
     return (
-        <div className={cardClass}>
-            <div className="card-header-admin">
-                <span className="event-id">ID: {event.id || 'N/A'}</span>
-                <span className={`status-label ${statusLabelClass}`}>{statusText}</span>
+        <div className={`bg-white p-6 rounded-xl shadow flex flex-wrap items-center ${borderLeftClass}`}>
+            <div className="w-full flex justify-between text-sm text-gray-500 mb-2">
+                <span>ID: {event.id || 'N/A'}</span>
+                <span className={`px-2 py-1 rounded text-xs font-medium ${isPublished ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-800'}`}>{statusText}</span>
             </div>
-            
-            <h3 className="event-title-admin">{event.title}</h3>
-            
-            <div className="event-info-admin">
-                <p>Tanggal: <strong>{event.date || 'N/A'}</strong></p>
-                <p>Batas Waktu Absensi: <strong>{event.absent_deadline || 'N/A'} WIB</strong></p>
+
+            <h3 className="w-full text-lg font-bold text-[#10243e] mb-3">{event.title}</h3>
+
+            <div className="w-full md:w-1/3 text-sm text-gray-600">
+                <p>Tanggal: <strong className="text-gray-800">{event.date || 'N/A'}</strong></p>
+                <p>Batas Waktu Absensi: <strong className="text-gray-800">{event.absent_deadline || 'N/A'} WIB</strong></p>
             </div>
-            
-            <div className="participants-info">
-                <span>
-                    <strong>{event.registered || 0}</strong> / {event.quota || '∞'}
-                </span>
-                <p className="participants-label">Absen/Total Peserta</p>
+
+            <div className="ml-auto text-right md:text-right md:w-1/5">
+                <div className="text-2xl font-bold text-[#10243e]">{event.registered || 0} / {event.quota || '∞'}</div>
+                <div className="text-xs text-gray-500">Absen/Total Peserta</div>
             </div>
-            
-            <div className="admin-actions">
-                {/* Tombol Kelola Peserta & Sertifikat - selalu ada */}
-                <Link to={`/admin/events/${event.id}/manage`} className="btn-action btn-manage">
-                    Kelola Peserta & Sertifikat
-                </Link>
+
+            <div className="w-full mt-4 flex flex-wrap gap-3">
+                <Link to={`/admin/events/${event.id}/manage`} className="px-4 py-2 bg-[#10243e] text-white rounded-md text-sm font-semibold">Kelola Peserta & Sertifikat</Link>
 
                 {isPublished ? (
                     <>
-                        {/* Tombol Khusus untuk Acara Aktif/Published */}
-                        <Link to={`/admin/events/${event.id}/upload-material`} className="btn-action btn-upload">
-                            Kelola & Upload Materi
-                        </Link>
-                        <Link to={`/admin/events/${event.id}/edit-deadline`} className="btn-action btn-edit-deadline">
-                            Ubah Batas Waktu Absensi
-                        </Link>
-                        <button className="btn-action btn-deactivate">
-                            Nonaktifkan Acara
-                        </button>
+                        <Link to={`/admin/events/${event.id}/upload-material`} className="px-4 py-2 bg-teal-500 text-white rounded-md text-sm font-semibold">Kelola & Upload Materi</Link>
+                        <Link to={`/admin/events/${event.id}/edit-deadline`} className="px-4 py-2 bg-yellow-400 text-[#212529] rounded-md text-sm font-semibold">Ubah Batas Waktu Absensi</Link>
+                        <button className="px-4 py-2 bg-gray-600 text-white rounded-md text-sm font-semibold">Nonaktifkan Acara</button>
                     </>
                 ) : (
                     <>
-                        {/* Tombol Khusus untuk Acara Draft */}
-                        <Link to={`/admin/events/${event.id}/publish`} className="btn-action btn-publish">
-                            Publikasi Acara
-                        </Link>
-                        {/* Tambahkan tombol edit draft jika diperlukan di sini */}
+                        <Link to={`/admin/events/${event.id}/publish`} className="px-4 py-2 bg-green-600 text-white rounded-md text-sm font-semibold">Publikasi Acara</Link>
                     </>
                 )}
             </div>

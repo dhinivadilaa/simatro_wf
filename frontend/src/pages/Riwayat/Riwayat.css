@@ -1,0 +1,173 @@
+/* --- File: src/pages/Riwayat/Riwayat.css --- */
+
+.riwayat-page {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background-color: #f8f9fa; /* Latar belakang abu-abu sangat muda */
+}
+
+.riwayat-container {
+    flex-grow: 1;
+    max-width: 1000px; 
+    margin: 40px auto;
+    padding: 0 20px;
+    width: 100%;
+}
+
+/* Header Info */
+.riwayat-header-info {
+    margin-bottom: 30px;
+    /* Menghilangkan border-bottom karena di screenshot tidak terlalu terlihat */
+}
+
+.back-link {
+    background: none;
+    border: none;
+    color: #6c757d; /* Abu-abu lembut */
+    cursor: pointer;
+    font-size: 14px;
+    margin-bottom: 20px;
+    display: block;
+    text-decoration: none;
+    font-weight: 500;
+}
+.back-link:hover {
+    color: #495057;
+}
+
+.riwayat-title {
+    font-size: 28px;
+    font-weight: 600; /* Font weight yang sedikit lebih tipis dari title admin */
+    margin-bottom: 5px;
+    color: #343a40; /* Hitam keabu-abuan */
+}
+
+.user-greeting {
+    font-size: 16px;
+    color: #6c757d;
+    font-weight: 400;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #dee2e6; /* Garis pemisah tipis */
+}
+
+/* Event Card List */
+.event-card {
+    background: #fff;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px; /* Jarak antar card */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075); /* Shadow ringan */
+}
+
+.event-info {
+    flex-grow: 1;
+    max-width: 50%;
+}
+
+/* Tag Seminar/Kuliah Umum */
+.event-tipe {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: #343a40;
+}
+.event-tipe-seminar-nasional {
+    background-color: #ffc107; /* Kuning (Sesuai Screenshot) */
+}
+.event-tipe-kuliah-umum {
+    background-color: #f8f9fa; /* Latar putih (Sesuai Screenshot) */
+    border: 1px solid #dee2e6;
+}
+
+.event-name {
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0;
+    color: #343a40;
+}
+
+.event-kode {
+    font-size: 13px;
+    color: #adb5bd; /* Abu-abu sangat tipis */
+    margin-top: 5px;
+}
+
+/* Status dan Actions Container */
+.event-status {
+    display: flex;
+    align-items: center;
+    gap: 40px; 
+    border-left: 1px solid #dee2e6; /* Pemisah vertikal */
+    padding-left: 30px;
+    height: 100%;
+}
+
+.status-kehadiran {
+    min-width: 150px;
+}
+
+.status-label {
+    font-size: 13px;
+    color: #6c757d;
+    margin-bottom: 5px;
+    font-weight: 400;
+}
+
+.status-badge {
+    font-weight: 700;
+    font-size: 15px;
+    white-space: nowrap;
+}
+.status-hadir {
+    color: #28a745; /* Hijau (Sesuai Screenshot) */
+}
+.status-terdaftar {
+    color: #fd7e14; /* Orange/Kuning gelap */
+}
+
+/* Tombol Aksi */
+.event-actions {
+    min-width: 140px; /* Lebar tombol dan span status */
+    text-align: right;
+}
+
+.btn-lihat-sertifikat {
+    background-color: #112d4e;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+
+.btn-lihat-sertifikat:hover {
+    background-color: #0056b3;
+}
+
+/* Status Keterangan (Belum Absensi, Sedang Diproses) */
+.status-keterangan {
+    font-size: 14px;
+    color: #6c757d;
+    display: block; /* Memastikan span berada di baris sendiri */
+    white-space: normal;
+}
+
+/* Gaya khusus untuk pesan error pada aksi */
+.status-belum-melakukan-absensi {
+    color: #dc3545; /* Merah untuk penolakan */
+    font-weight: 600;
+}
+.status-sertifikat-sedang-diproses {
+    color: #ffc107; /* Kuning untuk pending */
+}

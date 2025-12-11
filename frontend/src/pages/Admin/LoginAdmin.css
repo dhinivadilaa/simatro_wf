@@ -1,0 +1,157 @@
+/* =========================
+    GLOBAL STYLING
+========================= */
+.login-admin-page {
+    background: #f1f5fb;
+    min-height: 100vh;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    font-family: 'Inter', sans-serif;
+}
+
+/* =========================
+    NAVBAR
+========================= */
+.login-navbar {
+    background: #0e2a47; /* Biru tua seperti di gambar */
+    padding: 16px 40px;
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.login-navbar .logo {
+    font-size: 20px;
+    font-weight: 700;
+}
+
+.login-navbar .logo-dept {
+    font-weight: 400;
+    font-size: 16px;
+    margin-left: 8px;
+    color: #ffcc00; /* Warna kuning SIMATRO */
+}
+
+.login-navbar .btn-daftar-acara {
+    padding: 8px 16px;
+    background: #d9534f; /* Merah sesuai tombol logout di navbar dashboard */
+    color: white;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: background 0.2s;
+}
+
+.login-navbar .btn-daftar-acara:hover {
+    background: #c9302c;
+}
+
+/* =========================
+    CONTENT & CARD
+========================= */
+.login-content-wrapper {
+    flex-grow: 1; /* Agar mengambil sisa ruang dan memposisikan card di tengah vertikal */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+.login-card {
+    background: white;
+    padding: 40px;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 450px; /* Batasi lebar card agar terlihat bagus di tengah */
+    box-sizing: border-box;
+}
+
+.login-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: #0e2a47;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.access-info {
+    font-size: 14px;
+    color: #d9534f; /* Warna merah */
+    text-align: center;
+    margin-bottom: 30px;
+    font-weight: 500;
+}
+
+.login-error-message {
+    font-size: 14px;
+    color: #d9534f;
+    text-align: center;
+    padding: 10px;
+    border: 1px solid #d9534f;
+    background: #fcecec;
+    border-radius: 4px;
+    margin-bottom: 15px;
+}
+
+/* FORM */
+.login-form .form-group {
+    margin-bottom: 20px;
+}
+
+.login-form label {
+    display: block;
+    font-size: 14px;
+    font-weight: 500;
+    color: #333;
+    margin-bottom: 8px;
+}
+
+.login-form input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #d0d0d0;
+    border-radius: 6px;
+    font-size: 15px;
+    box-sizing: border-box;
+    transition: border-color 0.2s;
+}
+
+.login-form input:focus {
+    border-color: #0e2a47;
+    outline: none;
+}
+
+.btn-login-dashboard {
+    width: 100%;
+    padding: 14px;
+    background: #103a6f; /* Biru tua untuk tombol login */
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: background 0.2s;
+}
+
+.btn-login-dashboard:hover {
+    background: #0a2442;
+}
+
+
+/* =========================
+    FOOTER
+========================= */
+.login-footer {
+    text-align: center;
+    padding: 15px;
+    background: #0e2a47;
+    color: white;
+    font-size: 13px;
+    width: 100%;
+}

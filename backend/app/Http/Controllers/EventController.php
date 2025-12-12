@@ -10,7 +10,9 @@ class EventController extends Controller
     public function index()
     {
         return response()->json([
-            'data' => Event::withCount('participants')->get()
+            'data' => Event::where('registration_open', true)
+                ->withCount(['participants', 'attendances', 'certificates'])
+                ->get()
         ]);
     }
 
@@ -31,11 +33,13 @@ class EventController extends Controller
 
     public function show(Event $event)
     {
-        // Load relasi
-        $event->load(['participants', 'materials', 'feedbacks']);
+        // Load relasi penting
+        $event->load(['participants', 'attendances', 'certificates', 'materials', 'feedbacks']);
 
-        // Hitung jumlah peserta
+        // Tambahkan properti statistik berbasis relasi agar frontend mudah membaca
         $event->registered = $event->participants->count();
+        $event->attended_count = $event->attendances->count();
+        $event->certificates_count = $event->certificates->count();
 
         return response()->json([
             'data' => $event

@@ -1,48 +1,82 @@
 import React, { useEffect, useState } from "react";
 import api from "../../api/axios";
-import Header from "../../components/Header";
-import Footer from "../../components/Footer";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
-// Component untuk satu kartu acara di Dashboard
-    const EventCardAdmin = ({ event }) => {
-    const isPublished = event.status === 'Aktif & Publik';
-    const borderLeftClass = isPublished ? 'border-l-4 border-l-green-500' : 'border-l-4 border-l-yellow-400 bg-yellow-50';
-    const statusText = isPublished ? event.status : `Draft (Publikasi Tertunda)`;
+// Event Card Component with Statistics
+const EventCardAdmin = ({ event, onDelete }) => {
+    // Calculate statistics from event data
+    const totalParticipants = event.participants_count || 0;
+    const attendedCount = event.attendances_count || 0;
+    const certificateCount = event.certificates_count || 0;
 
     return (
-        <div className={`bg-white p-6 rounded-xl shadow flex flex-wrap items-center ${borderLeftClass}`}>
-            <div className="w-full flex justify-between text-sm text-gray-500 mb-2">
-                <span>ID: {event.id || 'N/A'}</span>
-                <span className={`px-2 py-1 rounded text-xs font-medium ${isPublished ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-800'}`}>{statusText}</span>
+        <div className="bg-white border-l-4 border-l-blue-500 rounded-lg shadow-md p-6 mb-6">
+            {/* Header */}
+            <div className="flex justify-between items-start mb-4">
+                <div className="flex-1">
+                    <span className="inline-block bg-blue-100 text-blue-700 px-3 py-1 rounded text-xs font-semibold mb-2">
+                        ID: {event.id}
+                    </span>
+                    <h3 className="text-lg font-bold text-gray-900">{event.title}</h3>
+                </div>
+                <span className="bg-green-100 text-green-700 px-3 py-1 rounded text-xs font-semibold">
+                    Aktif & Publik
+                </span>
             </div>
 
-            <h3 className="w-full text-lg font-bold text-[#10243e] mb-3">{event.title}</h3>
-
-            <div className="w-full md:w-1/3 text-sm text-gray-600">
-                <p>Tanggal: <strong className="text-gray-800">{event.date || 'N/A'}</strong></p>
-                <p>Batas Waktu Absensi: <strong className="text-gray-800">{event.absent_deadline || 'N/A'} WIB</strong></p>
+            {/* Info Section */}
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6 pb-6 border-b border-gray-200 text-sm">
+                <div>
+                    <p className="text-gray-600 font-medium">Tanggal</p>
+                    <p className="text-gray-900 font-semibold">{event.date || '-'}</p>
+                </div>
+                <div>
+                    <p className="text-gray-600 font-medium">Waktu Absensi</p>
+                    <p className="text-red-600 font-semibold">{event.absent_deadline || '-'}</p>
+                </div>
+                <div className="col-span-2 md:col-span-1">
+                    <p className="text-gray-600 font-medium">Peserta</p>
+                    <p className="text-gray-900 font-bold text-lg">{attendedCount} / {totalParticipants}</p>
+                </div>
             </div>
 
-            <div className="ml-auto text-right md:text-right md:w-1/5">
-                <div className="text-2xl font-bold text-[#10243e]">{event.registered || 0} / {event.quota || '∞'}</div>
-                <div className="text-xs text-gray-500">Absen/Total Peserta</div>
+            {/* Statistics Grid */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+                <div className="bg-blue-50 border border-blue-200 rounded p-3 text-center">
+                    <p className="text-xs text-gray-600">Total Peserta</p>
+                    <p className="text-2xl font-bold text-blue-600">{totalParticipants}</p>
+                </div>
+                <div className="bg-green-50 border border-green-200 rounded p-3 text-center">
+                    <p className="text-xs text-gray-600">Hadir</p>
+                    <p className="text-2xl font-bold text-green-600">{attendedCount}</p>
+                </div>
+                <div className="bg-amber-50 border border-amber-200 rounded p-3 text-center">
+                    <p className="text-xs text-gray-600">Sertifikat</p>
+                    <p className="text-2xl font-bold text-amber-600">{certificateCount}</p>
+                </div>
+                <div className="bg-gray-100 border border-gray-300 rounded p-3 text-center">
+                    <p className="text-xs text-gray-600">Tidak Hadir</p>
+                    <p className="text-2xl font-bold text-gray-700">{Math.max(0, totalParticipants - attendedCount)}</p>
+                </div>
             </div>
 
-            <div className="w-full mt-4 flex flex-wrap gap-3">
-                <Link to={`/admin/events/${event.id}/manage`} className="px-4 py-2 bg-[#10243e] text-white rounded-md text-sm font-semibold">Kelola Peserta & Sertifikat</Link>
-
-                {isPublished ? (
-                    <>
-                        <Link to={`/admin/events/${event.id}/upload-material`} className="px-4 py-2 bg-teal-500 text-white rounded-md text-sm font-semibold">Kelola & Upload Materi</Link>
-                        <Link to={`/admin/events/${event.id}/edit-deadline`} className="px-4 py-2 bg-yellow-400 text-[#212529] rounded-md text-sm font-semibold">Ubah Batas Waktu Absensi</Link>
-                        <button className="px-4 py-2 bg-gray-600 text-white rounded-md text-sm font-semibold">Nonaktifkan Acara</button>
-                    </>
-                ) : (
-                    <>
-                        <Link to={`/admin/events/${event.id}/publish`} className="px-4 py-2 bg-green-600 text-white rounded-md text-sm font-semibold">Publikasi Acara</Link>
-                    </>
-                )}
+            {/* Action Buttons */}
+            <div className="flex flex-wrap gap-2">
+                <Link to={`/admin/events/${event.id}/manage`} className="px-4 py-2 bg-blue-900 hover:bg-blue-800 text-white text-sm font-semibold rounded transition">
+                    Kelola Peserta & Sertifikat
+                </Link>
+                <Link to={`/admin/events/${event.id}/upload-material`} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded transition">
+                    Kelola & Upload Materi
+                </Link>
+                <button className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-sm font-semibold rounded transition">
+                    Ubah Batas Waktu Absensi
+                </button>
+                <button className="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white text-sm font-semibold rounded transition">
+                    Nonaktifkan Acara
+                </button>
+                <button onClick={() => onDelete(event.id)} className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded transition">
+                    Hapus Acara
+                </button>
             </div>
         </div>
     );
@@ -51,9 +85,15 @@ import { Link } from "react-router-dom";
 export default function DashboardAdmin() {
     const [events, setEvents] = useState([]);
     const [loading, setLoading] = useState(true);
+    const navigate = useNavigate();
 
     useEffect(() => {
-        // Asumsi API endpoint untuk admin dashboard events
+        // Set Authorization header from localStorage if available
+        const token = localStorage.getItem('adminAuthToken');
+        if (token) {
+            api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+        }
+
         api.get("/admin/events")
             .then((res) => {
                 const list = Array.isArray(res.data.data) ? res.data.data : [];
@@ -66,64 +106,84 @@ export default function DashboardAdmin() {
             });
     }, []);
 
-    const activeEvents = events.filter(e => e.status === 'Aktif & Publik');
-    const draftEvents = events.filter(e => e.status !== 'Aktif & Publik');
+    const handleLogout = () => {
+        localStorage.removeItem("adminAuthToken");
+        delete api.defaults.headers.common["Authorization"];
+        navigate("/admin/login");
+    };
 
-    if (loading) {
-        return (
-            <div className="loading-page">
-                <Header />
-                <p>Loading Events...</p>
-                <Footer />
-            </div>
-        );
-    }
+    const deleteEvent = async (eventId) => {
+        if (window.confirm("Apakah Anda yakin ingin menghapus acara ini?")) {
+            try {
+                await api.delete(`/events/${eventId}`);
+                setEvents(events.filter(event => event.id !== eventId));
+                alert("Acara berhasil dihapus!");
+            } catch (error) {
+                console.error("Error deleting event:", error);
+                alert("Gagal menghapus acara. Silakan coba lagi.");
+            }
+        }
+    };
 
     return (
-        <div className="dashboard-admin-page">
-            <Header />
+        <div className="min-h-screen bg-gray-100 flex flex-col">
+            {/* Header Navigation */}
+            <header className="bg-blue-900 text-white px-6 py-4 shadow-lg">
+                <div className="flex justify-between items-center">
+                    <h1 className="text-lg font-bold">
+                        <span className="text-yellow-400">⚡SIMATRO ADMIN</span> <span className="text-sm">TEKNIK ELEKTRO</span>
+                    </h1>
+                    <div className="flex gap-4 items-center">
+                        <button className="px-4 py-2 bg-blue-700 hover:bg-blue-600 rounded text-sm font-semibold transition">
+                            Dashboard
+                        </button>
+                        <button onClick={handleLogout} className="px-4 py-2 bg-red-600 hover:bg-red-700 rounded text-sm font-semibold transition">
+                            Logout
+                        </button>
+                    </div>
+                </div>
+            </header>
 
-            <div className="content-admin-wrapper">
-                <h1 className="dashboard-title">Dashboard Event Manager SIMATRO</h1>
+            <main className="flex-1 px-6 md:px-12 py-8">
+                {/* Page Title */}
+                <h2 className="text-3xl font-bold text-gray-900 mb-8">Dashboard Event Manager SIMATRO</h2>
 
                 {/* Manajemen Acara Section */}
-                <div className="management-section">
-                    <h2 className="section-title">Manajemen Acara</h2>
-                    <p className="section-subtitle">Mulai acara baru, atur konfigurasi batas waktu absensi, dan kelola daftar acara yang sedang aktif.</p>
-                    <Link to="/admin/events/new" className="btn-add-event">
-                        <i className="fas fa-plus-circle"></i> Tambah Acara Baru
+                <div className="bg-blue-50 border-2 border-blue-300 rounded-xl p-6 mb-8">
+                    <h3 className="text-lg font-bold text-gray-900 mb-2">Manajemen Acara</h3>
+                    <p className="text-gray-700 text-sm mb-4">
+                        Mulai acara baru, atur konfigurasi batas waktu absensi, dan kelola daftar acara yang sedang aktif.
+                    </p>
+                    <Link to="/admin/events/new" className="inline-block px-4 py-2 bg-blue-900 hover:bg-blue-800 text-white font-semibold rounded transition">
+                        + Tambah Acara Baru
                     </Link>
                 </div>
 
-                {/* Daftar Acara Aktif (Real-Time) */}
-                <div className="event-list-section">
-                    <h2 className="section-title">Daftar Acara Aktif (Real-Time)</h2>
-                    
-                    {activeEvents.length > 0 ? (
-                        <div className="event-list-container">
-                            {activeEvents.map(event => (
-                                <EventCardAdmin key={event.id} event={event} />
-                            ))}
-                        </div>
-                    ) : (
-                        <p className="no-events">Tidak ada acara yang aktif saat ini.</p>
-                    )}
-                </div>
+                {/* Active Events Section */}
+                <h3 className="text-2xl font-bold text-gray-900 mb-6">Daftar Acara Aktif (Real-Time)</h3>
 
-                {/* Daftar Acara Draft/Tertunda (Opsional, tapi baik untuk dipisah) */}
-                {draftEvents.length > 0 && (
-                    <div className="event-list-section draft-section">
-                        <h2 className="section-title">Daftar Acara Draft/Tertunda</h2>
-                        <div className="event-list-container">
-                            {draftEvents.map(event => (
-                                <EventCardAdmin key={event.id} event={event} />
-                            ))}
-                        </div>
+                {loading ? (
+                    <div className="text-center py-12">
+                        <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
+                        <p className="text-gray-600">Memuat acara...</p>
+                    </div>
+                ) : events.length > 0 ? (
+                    <div className="bg-white rounded-lg p-6 shadow-md">
+                        {events.map(event => (
+                            <EventCardAdmin key={event.id} event={event} onDelete={deleteEvent} />
+                        ))}
+                    </div>
+                ) : (
+                    <div className="bg-white rounded-lg p-8 text-center shadow-md">
+                        <p className="text-gray-500">Tidak ada acara yang aktif saat ini</p>
                     </div>
                 )}
-            </div>
+            </main>
 
-            <Footer />
+            {/* Footer */}
+            <footer className="bg-blue-900 text-white text-center py-4 text-sm">
+                © 2025 SIMATRO Jurusan Teknik Elektro. Admin Panel.
+            </footer>
         </div>
     );
 }

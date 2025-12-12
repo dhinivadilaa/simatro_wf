@@ -21,7 +21,7 @@ use App\Http\Controllers\FeedbackController;
 */
 
 // 🔑 LOGIN KHUSUS ADMIN PANEL
-Route::post('admin/login', [AuthController::class, 'loginAdmin']); 
+Route::post('admin/login', [AuthController::class, 'loginAdmin']);
 
 // Health Check
 Route::get('health', fn() => response()->json(['status' => 'API OK']));
@@ -30,6 +30,10 @@ Route::get('health', fn() => response()->json(['status' => 'API OK']));
 Route::get('events', [EventController::class, 'index']);
 Route::get('events/{event}', [EventController::class, 'show']);
 Route::post('events/{event}/participants', [ParticipantController::class, 'store']);
+
+// Public participant lookup by email and riwayat (history)
+Route::get('participants/by-email', [ParticipantController::class, 'findByEmail']);
+Route::get('participants/{participant}/riwayat', [ParticipantController::class, 'riwayat']);
 
 
 /*
@@ -42,6 +46,9 @@ Route::middleware('auth:sanctum')->group(function () {
     // Auth
     Route::post('logout', [AuthController::class, 'logout']);
     Route::get('user', [AuthController::class, 'user']);
+
+    // Admin Events Dashboard
+    Route::get('admin/events', [EventController::class, 'index']);
 
     // Users (Admin CRUD)
     Route::get('users', [UserController::class, 'index']);

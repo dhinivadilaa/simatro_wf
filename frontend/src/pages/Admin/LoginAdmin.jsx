@@ -26,8 +26,9 @@ export default function LoginAdmin() {
 
             // Asumsi server mengembalikan token atau data user yang valid saat sukses
             if (response.data && response.data.token) { 
-                // Simpan token atau informasi user di localStorage (contoh)
-                localStorage.setItem('adminAuthToken', response.data.token); 
+                localStorage.setItem('adminAuthToken', response.data.token);
+                // Set default Authorization header for future requests
+                api.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
                 
                 // Redirect ke Dashboard Admin
                 navigate('/admin/dashboard'); 
@@ -37,12 +38,20 @@ export default function LoginAdmin() {
             }
         } catch (err) {
             console.error("Login Error:", err);
-            
-            // Tangani error spesifik dari API (misal: 401 Unauthorized)
-            if (err.response && err.response.status === 401) {
-                 setError('Kombinasi Email dan Password salah.');
+            // Jika server mengirim validation errors atau message
+            if (err.response && err.response.data) {
+                const data = err.response.data;
+                // Laravel validation errors structure: { errors: { field: ['msg'] } }
+                if (data.errors) {
+                    const firstField = Object.keys(data.errors)[0];
+                    setError(data.errors[firstField][0]);
+                } else if (data.message) {
+                    setError(data.message);
+                } else {
+                    setError('Kredensial salah atau akses ditolak.');
+                }
             } else {
-                 setError('Gagal terhubung ke server. Coba lagi nanti.');
+                setError('Gagal terhubung ke server. Coba lagi nanti.');
             }
         } finally {
             setIsSubmitting(false);

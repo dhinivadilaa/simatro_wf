@@ -6,8 +6,8 @@ return [
 
     'allowed_methods' => ['*'],
 
-    // FRONTEND kamu (Vite) pakai port 5173
-    'allowed_origins' => ['http://localhost:5173'],
+    // FRONTEND kamu (Vite) pakai port 5173 atau 5174
+    'allowed_origins' => ['http://localhost:5173', 'http://localhost:5174'],
 
     'allowed_origins_patterns' => [],
 

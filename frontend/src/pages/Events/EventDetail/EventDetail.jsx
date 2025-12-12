@@ -26,7 +26,11 @@ export default function EventDetail() {
     };
 
     if (!event) {
-        return <p className="p-6">Loading...</p>;
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gray-50">
+                <p className="text-gray-600">Loading...</p>
+            </div>
+        );
     }
 
     // --- Fungsi Bantuan ---
@@ -36,13 +40,13 @@ export default function EventDetail() {
 
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-gray-50 flex flex-col">
             <Header />
 
-            <div className="max-w-5xl mx-auto px-4 py-10">
+            <main className="w-full px-6 md:px-12 py-12 flex-1">
                 <button className="text-sm text-blue-600 mb-4" onClick={() => navigate('/')}>← Kembali ke Daftar Acara</button>
 
-                <div className="bg-white rounded-2xl p-8 shadow">
+                <div className="bg-white rounded-2xl p-8 shadow w-full">
                     <h1 className="text-2xl font-bold text-gray-900">{event.title}</h1>
                     <div className="h-1 bg-yellow-400 w-full my-4 rounded"></div>
 
@@ -103,7 +107,7 @@ export default function EventDetail() {
                         </div>
                     </div>
                 </div>
-            </div>
+            </main>
 
             <Footer />
         </div>

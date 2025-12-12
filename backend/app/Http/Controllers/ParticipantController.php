@@ -71,4 +71,52 @@ class ParticipantController extends Controller
             'pin' => $participant->pin
         ];
     }
+
+    /**
+     * Public: find participants by email (returns array of participant records)
+     */
+    public function findByEmail(Request $request)
+    {
+        $email = $request->query('email');
+        if (!$email) {
+            return response()->json(['message' => 'Email query required'], 400);
+        }
+
+        $participants = Participant::with(['event', 'certificate', 'attendances'])
+            ->where('email', $email)
+            ->get();
+
+        if ($participants->isEmpty()) {
+            return response()->json([], 200);
+        }
+
+        return response()->json($participants);
+    }
+
+    /**
+     * Public: return riwayat (history) for a participant id.
+     * This will return all registrations that share the same email as the given participant,
+     * including related event, attendances and certificate.
+     */
+    public function riwayat(Participant $participant)
+    {
+        $email = $participant->email;
+
+        if (!$email) {
+            return response()->json(['message' => 'Participant has no email'], 400);
+        }
+
+        $riwayat = Participant::with(['event', 'certificate', 'attendances'])
+            ->where('email', $email)
+            ->get();
+
+        return response()->json([
+            'participant' => [
+                'id' => $participant->id,
+                'name' => $participant->name,
+                'email' => $participant->email,
+            ],
+            'riwayat' => $riwayat,
+        ]);
+    }
 }

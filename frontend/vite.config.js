@@ -10,4 +10,20 @@ export default defineConfig({
       },
     }),
   ],
+  server: {
+    proxy: {
+      // proxy API calls to the Laravel backend during development
+      '/api': {
+        target: 'http://127.0.0.1:8000',
+        changeOrigin: true,
+        secure: false,
+      },
+      // Proxy Sanctum CSRF cookie endpoint if used
+      '/sanctum': {
+        target: 'http://127.0.0.1:8000',
+        changeOrigin: true,
+        secure: false,
+      }
+    }
+  },
 })

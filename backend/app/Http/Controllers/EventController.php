@@ -19,11 +19,38 @@ class EventController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'title' => 'required',
-            'date' => 'required',
+            'category' => 'required|string|max:255',
+            'title' => 'required|string|max:255',
+            'topic' => 'nullable|string|max:255',
+            'description' => 'nullable|string',
+            'date' => 'required|date',
+            'location' => 'nullable|string|max:255',
+            'registration_open' => 'boolean',
+            'absent_deadline' => 'nullable|date_format:H:i',
+            'capacity' => 'nullable|integer|min:1',
+            'thumbnail' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
-        $event = Event::create($request->all());
+        // Convert empty strings to null for optional fields
+        $data = $request->all();
+        if (isset($data['absent_deadline']) && $data['absent_deadline'] === '') {
+            $data['absent_deadline'] = null;
+        }
+        if (isset($data['capacity']) && $data['capacity'] === '') {
+            $data['capacity'] = null;
+        }
+
+        // Convert string boolean to actual boolean
+        if (isset($data['registration_open'])) {
+            $data['registration_open'] = $data['registration_open'] === '1' || $data['registration_open'] === true;
+        }
+
+        if ($request->hasFile('thumbnail')) {
+            $thumbnailPath = $request->file('thumbnail')->store('thumbnails', 'public');
+            $data['thumbnail'] = $thumbnailPath;
+        }
+
+        $event = Event::create($data);
 
         return response()->json([
             'message' => 'Event created successfully',

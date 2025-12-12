@@ -6,6 +6,8 @@ import EventDetail from "../pages/Events/EventDetail/EventDetail";
 import PendaftaranEvent from "../pages/Events/PendaftaranEvent/PendaftaranEvent"; 
 import LoginAdmin from "../pages/Admin/LoginAdmin";
 import DashboardAdmin from "../pages/Admin/DashboardAdmin";
+import CreateEvent from "../pages/Admin/CreateEvent";
+import EventManagement from "../pages/Admin/EventManagement";
 import Riwayat from "../pages/Riwayat/Riwayat"; // ⬅️ IMPORT KOMPONEN RIWAYAT
 
 export default function Router() {
@@ -35,6 +37,12 @@ export default function Router() {
 
                 {/* Halaman Dashboard Admin (Perlu Proteksi di App Nyata) */}
                 <Route path="/admin/dashboard" element={<DashboardAdmin />} />
+
+                {/* Halaman Tambah Acara Baru */}
+                <Route path="/admin/events/new" element={<CreateEvent />} />
+
+                {/* Halaman Kelola Acara */}
+                <Route path="/admin/events/:eventId/manage" element={<EventManagement />} />
 
                 {/* Tambahkan rute admin lainnya di sini */}
 

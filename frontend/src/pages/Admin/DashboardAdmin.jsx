@@ -63,20 +63,8 @@ const EventCardAdmin = ({ event, onDelete }) => {
             {/* Action Buttons */}
             <div className="flex flex-wrap gap-2">
                 <Link to={`/admin/events/${event.id}/manage`} className="px-4 py-2 bg-blue-900 hover:bg-blue-800 text-white text-sm font-semibold rounded transition">
-                    Kelola Peserta & Sertifikat
+                    Kelola Acara
                 </Link>
-                <Link to={`/admin/events/${event.id}/upload-material`} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded transition">
-                    Kelola & Upload Materi
-                </Link>
-                <button className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-sm font-semibold rounded transition">
-                    Ubah Batas Waktu Absensi
-                </button>
-                <button className="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white text-sm font-semibold rounded transition">
-                    Nonaktifkan Acara
-                </button>
-                <button onClick={() => onDelete(event.id)} className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded transition">
-                    Hapus Acara
-                </button>
             </div>
         </div>
     );

@@ -59,6 +59,14 @@ export default function Home() {
                             >
                                 <span className={`inline-block px-3 py-1 rounded-md text-sm font-medium mb-3 ${tagClasses}`}>{event.category}</span>
 
+                                {event.thumbnail && (
+                                    <img
+                                        src={`http://localhost:8000/storage/${event.thumbnail}`}
+                                        alt={event.title}
+                                        className="w-full h-32 object-cover rounded-lg mb-3"
+                                    />
+                                )}
+
                                 <h3 className="text-lg font-semibold text-[#0d1b2a] mb-2">{event.title}</h3>
 
                                 {isClosed ? (

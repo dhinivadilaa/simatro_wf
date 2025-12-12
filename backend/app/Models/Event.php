@@ -10,10 +10,16 @@ class Event extends Model
     use HasFactory;
 
     protected $fillable = [
+        'category',
         'title',
+        'topic',
         'description',
         'date',
         'location',
+        'registration_open',
+        'absent_deadline',
+        'capacity',
+        'thumbnail',
     ];
 
     public function participants()

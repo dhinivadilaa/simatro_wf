@@ -8,7 +8,11 @@ import LoginAdmin from "../pages/Admin/LoginAdmin";
 import DashboardAdmin from "../pages/Admin/DashboardAdmin";
 import CreateEvent from "../pages/Admin/CreateEvent";
 import EventManagement from "../pages/Admin/EventManagement";
-import Riwayat from "../pages/Riwayat/Riwayat"; // ⬅️ IMPORT KOMPONEN RIWAYAT
+import CertificateTemplate from "../pages/Admin/CertificateTemplate";
+import CertificatePage from "../pages/Certificate/CertificatePage";
+import Riwayat from "../pages/Riwayat/Riwayat";
+import StatusPage from "../pages/Status/StatusPage";
+import ErrorBoundary from "../components/ErrorBoundary";
 
 export default function Router() {
     return (
@@ -19,13 +23,16 @@ export default function Router() {
                 <Route path="/" element={<Home />} />
 
                 {/* Detail Event */}
-                <Route path="/events/:id" element={<EventDetail />} />
+                <Route path="/events/:id" element={<ErrorBoundary><EventDetail /></ErrorBoundary>} />
 
                 {/* Halaman Pendaftaran Event */}
                 <Route path="/events/:id/register" element={<PendaftaranEvent />} /> 
                 
                 {/* 🔑 RUTE RIWAYAT PESERTA */}
                 <Route path="/riwayat" element={<Riwayat />} />
+                
+                {/* Status & Absensi */}
+                <Route path="/status" element={<StatusPage />} />
 
                 {/* --- Rute Admin --- */}
                 
@@ -43,6 +50,12 @@ export default function Router() {
 
                 {/* Halaman Kelola Acara */}
                 <Route path="/admin/events/:eventId/manage" element={<EventManagement />} />
+
+                {/* Halaman Template Sertifikat */}
+                <Route path="/admin/events/:eventId/certificate-template" element={<CertificateTemplate />} />
+                
+                {/* Halaman Sertifikat Peserta */}
+                <Route path="/certificate/:certificateId" element={<CertificatePage />} />
 
                 {/* Tambahkan rute admin lainnya di sini */}
 

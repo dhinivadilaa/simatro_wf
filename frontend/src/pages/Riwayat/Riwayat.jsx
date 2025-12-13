@@ -51,30 +51,31 @@ export default function Riwayat() {
     const [email, setEmail] = useState('');
     const [verified, setVerified] = useState(false);
     const [participantId, setParticipantId] = useState(null);
+    const [certificates, setCertificates] = useState([]);
 
     useEffect(() => {
         // Fetch riwayat only when participant is verified
-        if (!verified || !participantId) return;
+        if (!verified || !email) return;
 
         const fetchRiwayat = async () => {
             setLoading(true);
             setError(null);
 
-            const API_ENDPOINT = `/participants/${participantId}/riwayat`;
-
             try {
-                const response = await api.get(API_ENDPOINT);
-                // expect response.data = { participant: { name }, riwayat: [...] }
-                if (response && response.data) {
-                    setUserName(response.data.participant?.name || 'Peserta');
-                    setRiwayatEvents(response.data.riwayat || []);
-                } else {
-                    setError('Data riwayat peserta tidak ditemukan.');
-                    setRiwayatEvents([]);
+                // Fetch participant history
+                if (participantId) {
+                    const response = await api.get(`/participants/${participantId}/riwayat`);
+                    if (response && response.data) {
+                        console.log('Riwayat data:', response.data);
+                        setUserName(response.data.participant?.name || 'Peserta');
+                        setRiwayatEvents(response.data.riwayat || []);
+                    }
                 }
+                
+
             } catch (err) {
-                console.error('Gagal mengambil riwayat:', err);
-                setError('Gagal memuat data riwayat dari server atau data peserta tidak ditemukan.');
+                console.error('Gagal mengambil data:', err);
+                setError('Gagal memuat data dari server.');
                 setRiwayatEvents([]);
             } finally {
                 setLoading(false);
@@ -82,18 +83,24 @@ export default function Riwayat() {
         };
 
         fetchRiwayat();
-    }, [verified, participantId]);
+    }, [verified, participantId, email]);
 
     const handleBack = () => {
         // Asumsi kembali ke halaman detail acara terakhir atau Home
         navigate('/'); 
     }
     
-    const handleSertifikatClick = (filePath) => {
-        // Logika untuk mendownload/melihat sertifikat
-        if (filePath) {
-            window.open(filePath, '_blank');
+    const handleSertifikatClick = (certificate) => {
+        console.log('Certificate object:', certificate);
+        if (certificate && certificate.id) {
+            navigate(`/certificate/${certificate.id}`);
+        } else {
+            alert('Sertifikat tidak tersedia atau sedang diproses');
         }
+    }
+    
+    const downloadCertificate = (certificateId) => {
+        window.open(`${api.defaults.baseURL}/certificates/${certificateId}/download-public`, '_blank');
     }
 
     // Email verification handlers
@@ -143,6 +150,7 @@ export default function Riwayat() {
         setRiwayatEvents([]);
         setUserName('');
         setError(null);
+        setCertificates([]);
     }
 
 
@@ -178,6 +186,8 @@ export default function Riwayat() {
                             <button onClick={handleResetEmail} className="text-sm text-gray-500 hover:text-gray-700">Ubah Email</button>
                         </div>
 
+
+
                         {loading ? (
                             <p>Memuat riwayat acara...</p>
                         ) : (
@@ -197,6 +207,9 @@ export default function Riwayat() {
                                         attendance: attendanceObj,
                                         certificate: item.certificate || null,
                                     };
+                                    
+                                    console.log('Item certificate:', item.certificate);
+                                    console.log('Normalized certificate:', normalized.certificate);
 
                                     const status = getEventStatus(normalized);
 
@@ -215,8 +228,10 @@ export default function Riwayat() {
                                                 </div>
 
                                                 <div>
-                                                    {status.sertifikatAksi === 'Lihat Sertifikat' ? (
-                                                        <button onClick={() => handleSertifikatClick(item.certificate.file_path)} className="bg-[#112d4e] text-white px-3 py-2 rounded-md text-sm">{status.sertifikatAksi}</button>
+                                                    {status.sertifikatAksi === 'Lihat Sertifikat' && normalized.certificate?.id ? (
+                                                        <button onClick={() => handleSertifikatClick(normalized.certificate)} className="bg-[#112d4e] text-white px-3 py-2 rounded-md text-sm">{status.sertifikatAksi}</button>
+                                                    ) : status.isHadir ? (
+                                                        <button onClick={() => alert('Sertifikat sedang diproses oleh admin. Silakan coba lagi nanti.')} className="bg-gray-500 text-white px-3 py-2 rounded-md text-sm">Sertifikat Belum Tersedia</button>
                                                     ) : (
                                                         <span className="text-sm text-gray-600">{status.sertifikatAksi}</span>
                                                     )}

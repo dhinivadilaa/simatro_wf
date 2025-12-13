@@ -4,15 +4,24 @@ namespace App\Http\Controllers;
 
 use App\Models\Event;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class EventController extends Controller
 {
     public function index()
     {
+        $events = Event::withCount([
+            'participants',
+            'attendances', 
+            'certificates',
+            'materials'
+        ])
+        ->orderBy('created_at', 'desc')
+        ->get();
+            
         return response()->json([
-            'data' => Event::where('registration_open', true)
-                ->withCount(['participants', 'attendances', 'certificates'])
-                ->get()
+            'success' => true,
+            'data' => $events
         ]);
     }
 
@@ -60,15 +69,16 @@ class EventController extends Controller
 
     public function show(Event $event)
     {
-        // Load relasi penting
-        $event->load(['participants', 'attendances', 'certificates', 'materials', 'feedbacks']);
-
-        // Tambahkan properti statistik berbasis relasi agar frontend mudah membaca
-        $event->registered = $event->participants->count();
-        $event->attended_count = $event->attendances->count();
-        $event->certificates_count = $event->certificates->count();
+        // Load relasi dengan count
+        $event->loadCount([
+            'participants',
+            'attendances', 
+            'certificates',
+            'materials'
+        ]);
 
         return response()->json([
+            'success' => true,
             'data' => $event
         ]);
     }
@@ -79,6 +89,31 @@ class EventController extends Controller
 
         return response()->json([
             'message' => 'Event updated',
+            'data' => $event
+        ]);
+    }
+
+    public function uploadThumbnail(Request $request, $eventId)
+    {
+        $request->validate([
+            'thumbnail' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048'
+        ]);
+
+        $event = Event::findOrFail($eventId);
+        
+        if ($request->hasFile('thumbnail')) {
+            // Delete old thumbnail if exists
+            if ($event->thumbnail && Storage::disk('public')->exists($event->thumbnail)) {
+                Storage::disk('public')->delete($event->thumbnail);
+            }
+            
+            $thumbnailPath = $request->file('thumbnail')->store('thumbnails', 'public');
+            $event->update(['thumbnail' => $thumbnailPath]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Thumbnail uploaded successfully',
             'data' => $event
         ]);
     }

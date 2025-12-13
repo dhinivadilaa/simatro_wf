@@ -7,8 +7,30 @@ use Illuminate\Http\Request;
 
 class ParticipantController extends Controller
 {
-    public function index()
+    public function index($eventId = null)
     {
+        if ($eventId) {
+            $participants = Participant::with(['event', 'attendances'])
+                ->where('event_id', $eventId)
+                ->get();
+                
+            // Load certificates for each participant
+            $participants = $participants->map(function ($participant) {
+                $certificate = \App\Models\Certificate::with(['template', 'event'])
+                    ->where('participant_id', $participant->id)
+                    ->first();
+                $participant->certificate = $certificate;
+                $participant->attendance_status = $participant->attendances->count() > 0 ? 'present' : 'absent';
+                $participant->certificate_issued = $certificate ? true : false;
+                return $participant;
+            });
+            
+            return response()->json([
+                'success' => true,
+                'data' => $participants
+            ]);
+        }
+        
         return Participant::with('event')->get();
     }
 
@@ -41,7 +63,12 @@ class ParticipantController extends Controller
 
     public function show(Participant $participant)
     {
-        return $participant->load(['event', 'certificate']);
+        $participant->load(['event', 'attendances']);
+        $certificate = \App\Models\Certificate::with(['template', 'event'])
+            ->where('participant_id', $participant->id)
+            ->first();
+        $participant->certificate = $certificate;
+        return $participant;
     }
 
     public function update(Request $request, Participant $participant)
@@ -82,9 +109,18 @@ class ParticipantController extends Controller
             return response()->json(['message' => 'Email query required'], 400);
         }
 
-        $participants = Participant::with(['event', 'certificate', 'attendances'])
+        $participants = Participant::with(['event', 'attendances'])
             ->where('email', $email)
             ->get();
+            
+        // Load certificates for each participant with proper relations
+        $participants = $participants->map(function ($participant) {
+            $certificate = \App\Models\Certificate::with(['template', 'event'])
+                ->where('participant_id', $participant->id)
+                ->first();
+            $participant->certificate = $certificate;
+            return $participant;
+        });
 
         if ($participants->isEmpty()) {
             return response()->json([], 200);
@@ -106,9 +142,18 @@ class ParticipantController extends Controller
             return response()->json(['message' => 'Participant has no email'], 400);
         }
 
-        $riwayat = Participant::with(['event', 'certificate', 'attendances'])
+        $riwayat = Participant::with(['event', 'attendances'])
             ->where('email', $email)
             ->get();
+            
+        // Load certificates for each participant with proper relations
+        $riwayat = $riwayat->map(function ($participant) {
+            $certificate = \App\Models\Certificate::with(['template', 'event'])
+                ->where('participant_id', $participant->id)
+                ->first();
+            $participant->certificate = $certificate;
+            return $participant;
+        });
 
         return response()->json([
             'participant' => [

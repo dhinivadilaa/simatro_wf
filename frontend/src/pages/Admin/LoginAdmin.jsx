@@ -71,9 +71,9 @@ export default function LoginAdmin() {
 
     return (
         <div className="min-h-screen flex flex-col bg-gray-100">
-            <nav className="bg-[#0e2a47] text-white px-6 py-4 flex justify-between items-center shadow">
-                <div className="text-lg font-bold">SIMATRO ADMIN <span className="text-[#ffcc00] font-medium">TEKNIK ELEKTRO</span></div>
-                <Link to="/" className="bg-[#d9534f] hover:bg-[#c9302c] text-white px-3 py-2 rounded-md font-semibold text-sm">Daftar Acara</Link>
+            <nav className="bg-blue-900 text-white px-6 py-4 flex justify-between items-center shadow">
+                <div className="text-lg font-bold"><span className="text-yellow-400">⚡SIMATRO ADMIN</span> <span className="text-sm font-medium">UNIVERSITAS LAMPUNG</span></div>
+                <Link to="/" className="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-md font-semibold text-sm">Daftar Acara</Link>
             </nav>
 
             <div className="flex-1 flex items-center justify-center px-4 py-8">
@@ -128,7 +128,7 @@ export default function LoginAdmin() {
                 </div>
             </div>
 
-            <footer className="bg-[#0e2a47] text-white text-center py-3">© 2025 SIMATRO Jurusan Teknik Elektro. Admin Panel.</footer>
+            <footer className="bg-blue-900 text-white text-center py-3">© 2025 SIMATRO Universitas Lampung. Admin Panel.</footer>
         </div>
     );
 }

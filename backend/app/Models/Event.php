@@ -20,6 +20,7 @@ class Event extends Model
         'absent_deadline',
         'capacity',
         'thumbnail',
+        'attendance_pin',
     ];
 
     public function participants()

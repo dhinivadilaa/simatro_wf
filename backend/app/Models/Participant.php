@@ -34,6 +34,11 @@ class Participant extends Model
     {
         return $this->hasOne(Certificate::class);
     }
+    
+    public function certificates()
+    {
+        return $this->hasMany(Certificate::class);
+    }
 
     public function feedback()
     {

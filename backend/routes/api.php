@@ -31,9 +31,21 @@ Route::get('events', [EventController::class, 'index']);
 Route::get('events/{event}', [EventController::class, 'show']);
 Route::post('events/{event}/participants', [ParticipantController::class, 'store']);
 
+// Public Materials
+Route::get('events/{event}/materials', [MaterialController::class, 'index']);
+Route::get('materials/{material}/download', [MaterialController::class, 'download']);
+
 // Public participant lookup by email and riwayat (history)
 Route::get('participants/by-email', [ParticipantController::class, 'findByEmail']);
 Route::get('participants/{participant}/riwayat', [ParticipantController::class, 'riwayat']);
+
+// Public Attendance Check
+Route::post('attendance/check', [AttendanceController::class, 'checkAttendance']);
+
+// Public Certificate Access
+Route::get('participants/{email}/certificates', [CertificateTemplateController::class, 'getParticipantCertificates']);
+Route::get('certificates/{certificate}/view', [CertificateTemplateController::class, 'viewCertificate']);
+Route::get('certificates/{certificate}/download-public', [CertificateTemplateController::class, 'downloadCertificatePublic']);
 
 
 /*
@@ -65,19 +77,25 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Participants
     Route::get('events/{event}/participants', [ParticipantController::class, 'index']);
+    Route::get('participants/{participant}', [ParticipantController::class, 'show']);
     Route::put('participants/{participant}', [ParticipantController::class, 'update']);
     Route::delete('participants/{participant}', [ParticipantController::class, 'destroy']);
     Route::post('participants/{participant}/generate-pin', [ParticipantController::class, 'generatePin']);
 
-    // Attendance
-    Route::post('attendance/check', [AttendanceController::class, 'checkAttendance']);
+    // Attendance (Admin only)
     Route::get('events/{event}/attendance', [AttendanceController::class, 'list']);
 
     // Materials
-    Route::post('events/{event}/materials', [MaterialController::class, 'store']);
-    Route::get('events/{event}/materials', [MaterialController::class, 'index']);
-    Route::get('materials/{material}/download', [MaterialController::class, 'download']);
+    Route::post('events/{eventId}/materials', [MaterialController::class, 'store']);
     Route::delete('materials/{material}', [MaterialController::class, 'destroy']);
+    
+    // Admin specific routes
+    Route::get('admin/events/{eventId}/participants', function($eventId) {
+        return app(\App\Http\Controllers\ParticipantController::class)->index($eventId);
+    });
+    Route::get('admin/events/{eventId}/attendance-pin', [AttendanceController::class, 'getPin']);
+    Route::post('admin/events/{eventId}/generate-pin', [AttendanceController::class, 'generatePin']);
+    Route::post('admin/events/{eventId}/thumbnail', [EventController::class, 'uploadThumbnail']);
 
     // Certificates
     Route::post('participants/{participant}/certificate', [CertificateController::class, 'generate']);
@@ -88,6 +106,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('certificate-templates', [CertificateTemplateController::class, 'store']);
     Route::put('certificate-templates/{template}', [CertificateTemplateController::class, 'update']);
     Route::delete('certificate-templates/{template}', [CertificateTemplateController::class, 'destroy']);
+    Route::post('certificate-templates/{template}/generate', [CertificateTemplateController::class, 'generateCertificates']);
+    Route::get('events/{eventId}/certificates', [CertificateTemplateController::class, 'getCertificates']);
+    Route::get('certificates/{certificate}/download', [CertificateTemplateController::class, 'downloadCertificate']);
 
     // Feedback
     Route::post('events/{event}/feedback', [FeedbackController::class, 'store']);

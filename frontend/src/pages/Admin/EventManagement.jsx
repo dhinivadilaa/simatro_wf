@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import api from "../../api/axios";
+import UploadMaterial from "../../components/UploadMaterial";
 
 export default function EventManagement() {
     const { eventId } = useParams();
@@ -12,6 +13,11 @@ export default function EventManagement() {
     const [materials, setMaterials] = useState([]);
     const [attendancePin, setAttendancePin] = useState('');
     const [newPin, setNewPin] = useState('');
+    const [showUploadMaterial, setShowUploadMaterial] = useState(false);
+    const [showThumbnailUpload, setShowThumbnailUpload] = useState(false);
+    const [pinDeadline, setPinDeadline] = useState('');
+    const [showCertificateTemplate, setShowCertificateTemplate] = useState(false);
+    const [certificateTemplate, setCertificateTemplate] = useState({ title: '', content: '' });
 
     useEffect(() => {
         fetchEventData();
@@ -34,6 +40,7 @@ export default function EventManagement() {
     const fetchParticipants = async () => {
         try {
             const response = await api.get(`/admin/events/${eventId}/participants`);
+            console.log('Participants response:', response.data);
             setParticipants(response.data.data || []);
         } catch (error) {
             console.error("Error fetching participants:", error);
@@ -42,7 +49,7 @@ export default function EventManagement() {
 
     const fetchMaterials = async () => {
         try {
-            const response = await api.get(`/admin/events/${eventId}/materials`);
+            const response = await api.get(`/events/${eventId}/materials`);
             setMaterials(response.data.data || []);
         } catch (error) {
             console.error("Error fetching materials:", error);
@@ -116,6 +123,91 @@ export default function EventManagement() {
         }
     };
 
+    const handleUploadMaterial = async (eventId, title, file) => {
+        const formData = new FormData();
+        formData.append('title', title);
+        formData.append('file', file);
+
+        const response = await api.post(`/events/${eventId}/materials`, formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        });
+
+        alert("Materi berhasil diupload!");
+        fetchMaterials(); // Refresh the materials list
+        setShowUploadMaterial(false); // Hide upload form
+        return response;
+    };
+
+    const handleUploadThumbnail = async (file) => {
+        try {
+            const formData = new FormData();
+            formData.append('thumbnail', file);
+            
+            await api.post(`/admin/events/${eventId}/thumbnail`, formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+            
+            alert('Thumbnail berhasil diupload!');
+            fetchEventData();
+            setShowThumbnailUpload(false);
+        } catch (error) {
+            console.error('Error uploading thumbnail:', error);
+            alert('Gagal mengupload thumbnail');
+        }
+    };
+
+    const generatePinWithDeadline = async () => {
+        if (!pinDeadline) {
+            alert('Harap tentukan batas waktu absensi');
+            return;
+        }
+        
+        try {
+            const formattedDeadline = pinDeadline + ':00';
+            const response = await api.post(`/admin/events/${eventId}/generate-pin`, {
+                deadline: formattedDeadline
+            });
+            setAttendancePin(response.data.pin);
+            await fetchEventData();
+            setPinDeadline('');
+            alert('PIN absensi berhasil dibuat!');
+        } catch (error) {
+            console.error('Error generating PIN:', error);
+            const errorMsg = error.response?.data?.message || 'Gagal membuat PIN absensi';
+            alert(errorMsg);
+        }
+    };
+
+    const createCertificateTemplate = async () => {
+        try {
+            await api.post('/certificate-templates', {
+                event_id: eventId,
+                title: certificateTemplate.title,
+                content: certificateTemplate.content
+            });
+            alert('Template sertifikat berhasil dibuat!');
+            setShowCertificateTemplate(false);
+            setCertificateTemplate({ title: '', content: '' });
+        } catch (error) {
+            console.error('Error creating certificate template:', error);
+            alert('Gagal membuat template sertifikat');
+        }
+    };
+
+    const handleNavigate = (tab) => {
+        if (tab === 'materials') {
+            setActiveTab('materials');
+            setShowUploadMaterial(false);
+        } else if (tab === 'admin-dashboard') {
+            navigate('/admin/dashboard');
+        } else {
+            setActiveTab(tab);
+            setShowUploadMaterial(false);
+        }
+    };
+
     if (loading) {
         return (
             <div className="min-h-screen bg-gray-100 flex items-center justify-center">
@@ -144,7 +236,7 @@ export default function EventManagement() {
             <header className="bg-blue-900 text-white px-6 py-4 shadow-lg">
                 <div className="flex justify-between items-center">
                     <h1 className="text-lg font-bold">
-                        <span className="text-yellow-400">⚡SIMATRO ADMIN</span> <span className="text-sm">TEKNIK ELEKTRO</span>
+                        <span className="text-yellow-400">⚡SIMATRO ADMIN</span> <span className="text-sm">UNIVERSITAS LAMPUNG</span>
                     </h1>
                     <div className="flex gap-4 items-center">
                         <button
@@ -169,23 +261,48 @@ export default function EventManagement() {
 
             <main className="flex-1 px-6 md:px-12 py-8">
                 {/* Event Header */}
-                <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-                    <div className="flex justify-between items-start mb-4">
-                        <div>
-                            <h2 className="text-2xl font-bold text-gray-900">{event.title}</h2>
-                            <p className="text-gray-600 mt-1">{event.category} • {event.date}</p>
-                        </div>
-                        <div className="flex gap-2">
-                            {event.status === 'draft' && (
+                <div className="bg-white rounded-lg shadow-md overflow-hidden mb-6">
+                    {/* Thumbnail Section */}
+                    <div className="relative h-48 bg-gradient-to-r from-blue-500 to-purple-600">
+                        {event.thumbnail ? (
+                            <img 
+                                src={`${api.defaults.baseURL}/storage/${event.thumbnail}`} 
+                                alt={event.title}
+                                className="w-full h-full object-cover"
+                            />
+                        ) : (
+                            <div className="flex items-center justify-center h-full text-white">
+                                <div className="text-center">
+                                    <div className="text-4xl mb-2">🎯</div>
+                                    <p className="text-lg font-semibold">{event.title}</p>
+                                </div>
+                            </div>
+                        )}
+                        <button
+                            onClick={() => setShowThumbnailUpload(true)}
+                            className="absolute top-4 right-4 bg-black bg-opacity-50 text-white px-3 py-1 rounded text-sm hover:bg-opacity-70"
+                        >
+                            📷 Edit Thumbnail
+                        </button>
+                    </div>
+                    
+                    <div className="p-6">
+                        <div className="flex justify-between items-start mb-4">
+                            <div>
+                                <h2 className="text-2xl font-bold text-gray-900">{event.title}</h2>
+                                <p className="text-gray-600 mt-1">{event.category} • {event.date}</p>
+                            </div>
+                            <div className="flex gap-2">
+                                {event.status === 'draft' && (
+                                    <button
+                                        onClick={publishEvent}
+                                        className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold rounded transition"
+                                    >
+                                        📢 Publikasikan
+                                    </button>
+                                )}
                                 <button
-                                    onClick={publishEvent}
-                                    className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold rounded transition"
-                                >
-                                    Publikasikan Acara
-                                </button>
-                            )}
-                            <button
-                                onClick={toggleEventStatus}
+                                    onClick={toggleEventStatus}
                                 className={`px-4 py-2 text-white text-sm font-semibold rounded transition ${
                                     event.registration_open
                                         ? 'bg-orange-600 hover:bg-orange-700'
@@ -203,22 +320,25 @@ export default function EventManagement() {
                         </div>
                     </div>
 
-                    {/* Status Badge */}
-                    <div className="flex gap-2">
-                        <span className={`px-3 py-1 rounded text-xs font-semibold ${
-                            event.status === 'published'
-                                ? 'bg-green-100 text-green-700'
-                                : 'bg-yellow-100 text-yellow-700'
-                        }`}>
-                            {event.status === 'published' ? 'Published' : 'Draft'}
-                        </span>
-                        <span className={`px-3 py-1 rounded text-xs font-semibold ${
-                            event.registration_open
-                                ? 'bg-blue-100 text-blue-700'
-                                : 'bg-gray-100 text-gray-700'
-                        }`}>
-                            {event.registration_open ? 'Pendaftaran Dibuka' : 'Pendaftaran Ditutup'}
-                        </span>
+                        {/* Status Badges */}
+                        <div className="flex gap-2 mb-4">
+                            <span className={`px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1 ${
+                                event.status === 'published'
+                                    ? 'bg-green-100 text-green-700'
+                                    : 'bg-yellow-100 text-yellow-700'
+                            }`}>
+                                {event.status === 'published' ? '✅' : '📝'}
+                                {event.status === 'published' ? 'Published' : 'Draft'}
+                            </span>
+                            <span className={`px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1 ${
+                                event.registration_open
+                                    ? 'bg-blue-100 text-blue-700'
+                                    : 'bg-red-100 text-red-700'
+                            }`}>
+                                {event.registration_open ? '🔓' : '🔒'}
+                                {event.registration_open ? 'Pendaftaran Dibuka' : 'Pendaftaran Ditutup'}
+                            </span>
+                        </div>
                     </div>
                 </div>
 
@@ -253,37 +373,64 @@ export default function EventManagement() {
                     {activeTab === 'overview' && (
                         <div>
                             <h3 className="text-lg font-bold text-gray-900 mb-4">Ringkasan Acara</h3>
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                                 <div className="bg-blue-50 border border-blue-200 rounded p-4 text-center">
                                     <p className="text-sm text-gray-600">Total Peserta</p>
-                                    <p className="text-3xl font-bold text-blue-600">{participants.length}</p>
+                                    <p className="text-3xl font-bold text-blue-600">{event?.participants_count || 0}</p>
                                 </div>
                                 <div className="bg-green-50 border border-green-200 rounded p-4 text-center">
                                     <p className="text-sm text-gray-600">Hadir</p>
-                                    <p className="text-3xl font-bold text-green-600">
-                                        {participants.filter(p => p.attendance_status === 'present').length}
-                                    </p>
+                                    <p className="text-3xl font-bold text-green-600">{event?.attendances_count || 0}</p>
                                 </div>
                                 <div className="bg-amber-50 border border-amber-200 rounded p-4 text-center">
                                     <p className="text-sm text-gray-600">Sertifikat</p>
-                                    <p className="text-3xl font-bold text-amber-600">
-                                        {participants.filter(p => p.certificate_issued).length}
-                                    </p>
+                                    <p className="text-3xl font-bold text-amber-600">{event?.certificates_count || 0}</p>
+                                </div>
+                                <div className="bg-purple-50 border border-purple-200 rounded p-4 text-center">
+                                    <p className="text-sm text-gray-600">Materi</p>
+                                    <p className="text-3xl font-bold text-purple-600">{event?.materials_count || 0}</p>
                                 </div>
                             </div>
 
-                            <div className="mt-6">
-                                <h4 className="font-semibold text-gray-900 mb-2">PIN Absensi</h4>
-                                <div className="flex items-center gap-4">
-                                    <span className="text-2xl font-mono font-bold text-blue-600 bg-blue-50 px-4 py-2 rounded">
-                                        {attendancePin || 'Belum dibuat'}
-                                    </span>
-                                    <button
-                                        onClick={generateNewPin}
-                                        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded transition"
-                                    >
-                                        {attendancePin ? 'Buat PIN Baru' : 'Buat PIN'}
-                                    </button>
+                            <div className="mt-6 bg-gray-50 rounded-lg p-4">
+                                <h4 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                                    🔑 Kelola PIN Absensi
+                                </h4>
+                                
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                            PIN Absensi Aktif
+                                        </label>
+                                        <div className="text-3xl font-mono font-bold text-blue-600 bg-white px-4 py-3 rounded border text-center">
+                                            {attendancePin || 'Belum dibuat'}
+                                        </div>
+                                    </div>
+                                    
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                            Batas Waktu Absensi
+                                        </label>
+                                        <div className="flex gap-2">
+                                            <input
+                                                type="datetime-local"
+                                                value={pinDeadline}
+                                                onChange={(e) => setPinDeadline(e.target.value)}
+                                                className="flex-1 border rounded-lg p-2 text-sm"
+                                            />
+                                            <button
+                                                onClick={generatePinWithDeadline}
+                                                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded transition"
+                                            >
+                                                {attendancePin ? '🔄 Update' : '✨ Buat PIN'}
+                                            </button>
+                                        </div>
+                                        {event.absent_deadline && (
+                                            <p className="text-xs text-gray-500 mt-1">
+                                                Deadline: {new Date(event.absent_deadline).toLocaleString('id-ID')}
+                                            </p>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -292,6 +439,30 @@ export default function EventManagement() {
                     {activeTab === 'participants' && (
                         <div>
                             <h3 className="text-lg font-bold text-gray-900 mb-4">Kelola Peserta & Sertifikat</h3>
+                            
+                            <div className="mb-6 bg-gray-50 rounded-lg p-4">
+                                <h4 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                                    🏆 Template & Sertifikat
+                                </h4>
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={() => navigate(`/admin/events/${eventId}/certificate-template`)}
+                                        className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold rounded transition"
+                                    >
+                                        📄 Kelola Template Sertifikat
+                                    </button>
+                                    <button
+                                        onClick={() => window.open(`/admin/events/${eventId}/certificate-template`, '_blank')}
+                                        className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-semibold rounded transition"
+                                    >
+                                        🎓 Generate Sertifikat Peserta
+                                    </button>
+                                </div>
+                                <p className="text-xs text-gray-500 mt-2">
+                                    Upload template dari Canva, lalu generate sertifikat untuk semua peserta yang hadir
+                                </p>
+                            </div>
+
                             <div className="overflow-x-auto">
                                 <table className="w-full text-sm">
                                     <thead>
@@ -341,10 +512,24 @@ export default function EventManagement() {
                         <div>
                             <h3 className="text-lg font-bold text-gray-900 mb-4">Kelola & Upload Materi</h3>
                             <div className="mb-4">
-                                <button className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded transition">
+                                <button
+                                    onClick={() => setShowUploadMaterial(true)}
+                                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded transition"
+                                >
                                     Upload Materi Baru
                                 </button>
                             </div>
+
+                            {showUploadMaterial && (
+                                <div className="mb-6">
+                                    <UploadMaterial
+                                        event={event}
+                                        onUpload={handleUploadMaterial}
+                                        onNavigate={handleNavigate}
+                                    />
+                                </div>
+                            )}
+
                             <div className="space-y-3">
                                 {materials.map(material => (
                                     <div key={material.id} className="flex items-center justify-between p-3 bg-gray-50 rounded">
@@ -411,8 +596,35 @@ export default function EventManagement() {
 
             {/* Footer */}
             <footer className="bg-blue-900 text-white text-center py-4 text-sm">
-                © 2025 SIMATRO Jurusan Teknik Elektro. Admin Panel.
+                © 2025 SIMATRO Universitas Lampung. Admin Panel.
             </footer>
+
+            {/* Thumbnail Upload Modal */}
+            {showThumbnailUpload && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-lg w-full max-w-md p-6">
+                        <h3 className="text-lg font-semibold mb-4">Upload Thumbnail Acara</h3>
+                        <input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => {
+                                if (e.target.files[0]) {
+                                    handleUploadThumbnail(e.target.files[0]);
+                                }
+                            }}
+                            className="w-full border rounded-lg p-3 mb-4"
+                        />
+                        <div className="flex gap-2">
+                            <button
+                                onClick={() => setShowThumbnailUpload(false)}
+                                className="flex-1 bg-gray-500 hover:bg-gray-600 text-white py-2 rounded-lg"
+                            >
+                                Batal
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

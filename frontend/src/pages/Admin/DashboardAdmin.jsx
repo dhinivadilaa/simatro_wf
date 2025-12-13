@@ -8,6 +8,7 @@ const EventCardAdmin = ({ event, onDelete }) => {
     const totalParticipants = event.participants_count || 0;
     const attendedCount = event.attendances_count || 0;
     const certificateCount = event.certificates_count || 0;
+    const materialsCount = event.materials_count || 0;
 
     return (
         <div className="bg-white border-l-4 border-l-blue-500 rounded-lg shadow-md p-6 mb-6">
@@ -54,9 +55,9 @@ const EventCardAdmin = ({ event, onDelete }) => {
                     <p className="text-xs text-gray-600">Sertifikat</p>
                     <p className="text-2xl font-bold text-amber-600">{certificateCount}</p>
                 </div>
-                <div className="bg-gray-100 border border-gray-300 rounded p-3 text-center">
-                    <p className="text-xs text-gray-600">Tidak Hadir</p>
-                    <p className="text-2xl font-bold text-gray-700">{Math.max(0, totalParticipants - attendedCount)}</p>
+                <div className="bg-purple-50 border border-purple-200 rounded p-3 text-center">
+                    <p className="text-xs text-gray-600">Materi</p>
+                    <p className="text-2xl font-bold text-purple-600">{materialsCount}</p>
                 </div>
             </div>
 
@@ -75,8 +76,7 @@ export default function DashboardAdmin() {
     const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
 
-    useEffect(() => {
-        // Set Authorization header from localStorage if available
+    const fetchEvents = () => {
         const token = localStorage.getItem('adminAuthToken');
         if (token) {
             api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
@@ -92,6 +92,15 @@ export default function DashboardAdmin() {
                 console.error("Error fetching admin events:", err);
                 setLoading(false);
             });
+    };
+
+    useEffect(() => {
+        fetchEvents();
+        
+        // Auto-refresh setiap 30 detik
+        const interval = setInterval(fetchEvents, 30000);
+        
+        return () => clearInterval(interval);
     }, []);
 
     const handleLogout = () => {
@@ -119,7 +128,7 @@ export default function DashboardAdmin() {
             <header className="bg-blue-900 text-white px-6 py-4 shadow-lg">
                 <div className="flex justify-between items-center">
                     <h1 className="text-lg font-bold">
-                        <span className="text-yellow-400">⚡SIMATRO ADMIN</span> <span className="text-sm">TEKNIK ELEKTRO</span>
+                        <span className="text-yellow-400">⚡SIMATRO ADMIN</span> <span className="text-sm">UNIVERSITAS LAMPUNG</span>
                     </h1>
                     <div className="flex gap-4 items-center">
                         <button className="px-4 py-2 bg-blue-700 hover:bg-blue-600 rounded text-sm font-semibold transition">
@@ -170,7 +179,7 @@ export default function DashboardAdmin() {
 
             {/* Footer */}
             <footer className="bg-blue-900 text-white text-center py-4 text-sm">
-                © 2025 SIMATRO Jurusan Teknik Elektro. Admin Panel.
+                © 2025 SIMATRO Universitas Lampung. Admin Panel.
             </footer>
         </div>
     );

@@ -1,0 +1,71 @@
+/* src/index.css */
+
+/* ------------------------------------------- */
+/* 1. DIRECTIVES TAILWIND WAJIB */
+/* ------------------------------------------- */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ------------------------------------------- */
+/* 2. CUSTOM GLOBAL STYLES / OVERRIDES */
+/* ------------------------------------------- */
+body {
+  margin: 0;
+  /* Font Family yang disesuaikan */
+  font-family: 'Inter', sans-serif; 
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.view {
+  /* Memberikan padding dan margin default untuk semua 'views' */
+  @apply p-6 md:p-8 my-8; 
+}
+
+/* ------------------------------------------- */
+/* 3. CUSTOM ANIMATIONS & HOVER EFFECTS */
+/* ------------------------------------------- */
+
+/* Animasi untuk tombol */
+.animated-btn {
+  /* Durasi transisi */
+  @apply transition ease-in-out duration-300 transform;
+}
+
+.animated-btn:hover {
+  /* Membesar 5% saat hover (Standar Tailwind) */
+  @apply scale-105;
+}
+
+/* Efek saat tombol ditekan (agar terasa responsif) */
+.animated-btn:active {
+  /* Menyusut 5% saat aktif (Standar Tailwind) */
+  @apply scale-95; 
+}
+
+
+/* Animasi untuk kartu */
+.card-hover {
+  /* Durasi transisi */
+  @apply transition ease-in-out duration-300 transform;
+}
+
+.card-hover:hover {
+  /* Bergeser ke atas dan sedikit membesar (digunakan scale-105 standar) */
+  @apply -translate-y-1 scale-105; 
+  /* Catatan: scale-105 sudah memberikan efek yang cukup baik untuk hover */
+}
+
+
+/* ------------------------------------------- */
+/* 4. LAYOUT KHUSUS */
+/* ------------------------------------------- */
+
+/* Certificate Preview - Tambahan untuk tampilan landscape */
+.certificate-template {
+    width: 100%;
+    /* Menggunakan rasio 1.5:1 untuk tampilan landscape */
+    aspect-ratio: 1.5 / 1; 
+    min-height: 400px; 
+}

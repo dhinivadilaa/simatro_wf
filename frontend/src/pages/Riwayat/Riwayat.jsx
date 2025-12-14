@@ -53,6 +53,7 @@ export default function Riwayat() {
     const [participantId, setParticipantId] = useState(null);
     const [certificates, setCertificates] = useState([]);
 
+
     useEffect(() => {
         // Fetch riwayat only when participant is verified
         if (!verified || !email) return;
@@ -176,7 +177,13 @@ export default function Riwayat() {
                         <label className="block text-sm font-medium text-gray-700 mb-2">Email peserta</label>
                         <div className="flex gap-2">
                             <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="email@contoh.com" className="flex-1 border rounded px-3 py-2" />
-                            <button type="submit" className="bg-[#112d4e] text-white px-4 py-2 rounded">Konfirmasi</button>
+                            <button 
+                                type="submit" 
+                                disabled={loading}
+                                className="bg-[#112d4e] text-white px-4 py-2 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {loading ? 'Memproses...' : 'Konfirmasi'}
+                            </button>
                         </div>
                         <p className="text-xs text-gray-500 mt-3">Jika email terdaftar, riwayat acara Anda akan ditampilkan.</p>
                     </form>
@@ -227,7 +234,7 @@ export default function Riwayat() {
                                                     {status.statusKehadiran}{status.checkInTime !== 'N/A' && ` (${status.checkInTime} WIB)`}
                                                 </div>
 
-                                                <div>
+                                                <div className="flex flex-col gap-2">
                                                     {status.sertifikatAksi === 'Lihat Sertifikat' && normalized.certificate?.id ? (
                                                         <button onClick={() => handleSertifikatClick(normalized.certificate)} className="bg-[#112d4e] text-white px-3 py-2 rounded-md text-sm">{status.sertifikatAksi}</button>
                                                     ) : status.isHadir ? (
@@ -245,6 +252,8 @@ export default function Riwayat() {
                     </div>
                 )}
             </div>
+
+
 
             <Footer />
         </div>

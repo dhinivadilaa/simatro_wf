@@ -8,6 +8,7 @@ export default function StatusPage() {
     const navigate = useNavigate();
     const [email, setEmail] = useState('');
     const [pin, setPin] = useState('');
+    const [proofPhoto, setProofPhoto] = useState(null);
     const [loading, setLoading] = useState(false);
     const [attendanceStatus, setAttendanceStatus] = useState(null);
     const [error, setError] = useState('');
@@ -49,10 +50,16 @@ export default function StatusPage() {
         setAttendanceStatus(null);
 
         try {
-            const response = await api.post('/attendance/check', {
-                event_id: eventId,
-                email: email,
-                pin: pin
+            const formData = new FormData();
+            formData.append('event_id', eventId);
+            formData.append('email', email);
+            formData.append('pin', pin);
+            if (proofPhoto) {
+                formData.append('proof_photo', proofPhoto);
+            }
+
+            const response = await api.post('/attendance/check', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
             });
 
             setAttendanceStatus({
@@ -223,6 +230,21 @@ export default function StatusPage() {
                         />
                         <p style={styles.exampleText}>
                             Kode ini sama untuk semua peserta, dan hanya berlaku saat acara.
+                        </p>
+
+                        <label htmlFor="photo" style={styles.label}>
+                            Upload Bukti Foto di Tempat (Opsional)
+                        </label>
+                        <input
+                            id="photo"
+                            type="file"
+                            accept="image/*"
+                            style={styles.input}
+                            onChange={(e) => setProofPhoto(e.target.files[0])}
+                            disabled={loading}
+                        />
+                        <p style={styles.exampleText}>
+                            Upload foto sebagai bukti kehadiran Anda di tempat acara (format: JPG, PNG, max 5MB).
                         </p>
 
                         {error && (

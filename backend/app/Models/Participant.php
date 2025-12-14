@@ -16,6 +16,12 @@ class Participant extends Model
         'phone',
         'pin',
         'registered_at',
+        'certificate_issued',
+    ];
+
+    protected $casts = [
+        'certificate_issued' => 'boolean',
+        'registered_at' => 'datetime',
     ];
 
     protected $dates = ['registered_at'];

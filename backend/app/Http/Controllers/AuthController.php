@@ -34,7 +34,7 @@ class AuthController extends Controller
 
         return response()->json([
             'token' => $token,
-            'user' => $user->load('role'),
+            'user' => $user,
         ]);
     }
     
@@ -43,5 +43,13 @@ class AuthController extends Controller
     {
         $request->user()->currentAccessToken()->delete();
         return response()->json(['message' => 'Logout berhasil.']);
+    }
+    
+    // Method untuk mendapatkan user yang sedang login
+    public function user(Request $request)
+    {
+        return response()->json([
+            'user' => $request->user()
+        ]);
     }
 }

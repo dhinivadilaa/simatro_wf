@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import api from '../../api/axios';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
+import { testCertificateAPI, checkBackendConnection } from '../../utils/apiTest';
 
 export default function CertificatePage() {
     const { certificateId } = useParams();
@@ -13,7 +14,16 @@ export default function CertificatePage() {
     const [submittingFeedback, setSubmittingFeedback] = useState(false);
 
     useEffect(() => {
-        fetchCertificate();
+        // Test backend connection first
+        checkBackendConnection().then(isConnected => {
+            console.log('Backend connected:', isConnected);
+            if (isConnected) {
+                fetchCertificate();
+            } else {
+                console.error('Backend server tidak dapat diakses');
+                setLoading(false);
+            }
+        });
     }, [certificateId]);
 
     const fetchCertificate = async () => {
@@ -26,10 +36,43 @@ export default function CertificatePage() {
         }
         
         try {
+            console.log('Fetching certificate with ID:', certificateId);
             const response = await api.get(`/certificates/${certificateId}/view`);
-            setCertificate(response.data.data);
+            console.log('API Response:', response.data);
+            
+            if (response.data && response.data.success) {
+                setCertificate(response.data.data);
+                console.log('Certificate loaded successfully:', response.data.data);
+            } else {
+                console.error('Certificate not found or invalid response:', response.data);
+                setCertificate(null);
+            }
         } catch (error) {
             console.error('Error fetching certificate:', error);
+            if (error.response) {
+                console.error('Response status:', error.response.status);
+                console.error('Response data:', error.response.data);
+                
+                // Jika certificate tidak ditemukan, coba gunakan ID yang valid untuk testing
+                if (error.response.status === 404 && certificateId !== '2') {
+                    console.log('Certificate not found, trying with test certificate ID: 2');
+                    try {
+                        const testResponse = await api.get('/certificates/2/view');
+                        if (testResponse.data && testResponse.data.success) {
+                            setCertificate(testResponse.data.data);
+                            console.log('Test certificate loaded:', testResponse.data.data);
+                            return;
+                        }
+                    } catch (testError) {
+                        console.error('Test certificate also failed:', testError);
+                    }
+                }
+            } else if (error.request) {
+                console.error('No response received:', error.request);
+            } else {
+                console.error('Request setup error:', error.message);
+            }
+            setCertificate(null);
         } finally {
             setLoading(false);
         }
@@ -46,15 +89,16 @@ export default function CertificatePage() {
         setSubmittingFeedback(true);
         try {
             await api.post(`/events/${certificate.event_id}/feedback`, {
-                participant_id: certificate.participant_id,
-                rating: feedback.rating,
+                participant_email: certificate.participant_email,
+                rating: parseInt(feedback.rating),
                 comments: feedback.comments
             });
             alert('Feedback berhasil dikirim!');
             setFeedback({ rating: '', comments: '' });
         } catch (error) {
             console.error('Error submitting feedback:', error);
-            alert('Gagal mengirim feedback');
+            const errorMsg = error.response?.data?.message || 'Gagal mengirim feedback';
+            alert(errorMsg);
         } finally {
             setSubmittingFeedback(false);
         }
@@ -169,7 +213,38 @@ export default function CertificatePage() {
         return (
             <div style={styles.pageContainer}>
                 <div style={{ textAlign: 'center', padding: '50px' }}>
-                    <p>Sertifikat tidak ditemukan</p>
+                    <h3>Sertifikat Tidak Ditemukan</h3>
+                    <p>Certificate ID: {certificateId}</p>
+                    <p>Sertifikat dengan ID tersebut tidak ditemukan dalam sistem.</p>
+                    <div style={{ marginTop: '20px' }}>
+                        <button 
+                            onClick={() => navigate('/riwayat')}
+                            style={{
+                                marginRight: '10px',
+                                padding: '10px 20px',
+                                backgroundColor: '#002C6A',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '5px',
+                                cursor: 'pointer'
+                            }}
+                        >
+                            Kembali ke Dashboard
+                        </button>
+                        <button 
+                            onClick={() => navigate('/certificate/2')}
+                            style={{
+                                padding: '10px 20px',
+                                backgroundColor: '#28a745',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '5px',
+                                cursor: 'pointer'
+                            }}
+                        >
+                            Lihat Sertifikat Test
+                        </button>
+                    </div>
                 </div>
             </div>
         );

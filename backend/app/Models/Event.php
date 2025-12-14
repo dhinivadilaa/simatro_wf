@@ -17,6 +17,7 @@ class Event extends Model
         'date',
         'location',
         'registration_open',
+        'status',
         'absent_deadline',
         'capacity',
         'thumbnail',

@@ -44,8 +44,26 @@ Route::post('attendance/check', [AttendanceController::class, 'checkAttendance']
 
 // Public Certificate Access
 Route::get('participants/{email}/certificates', [CertificateTemplateController::class, 'getParticipantCertificates']);
-Route::get('certificates/{certificate}/view', [CertificateTemplateController::class, 'viewCertificate']);
-Route::get('certificates/{certificate}/download-public', [CertificateTemplateController::class, 'downloadCertificatePublic']);
+Route::get('certificates/{certificate}/view', [CertificateTemplateController::class, 'viewCertificate'])->where('certificate', '[0-9]+');
+Route::get('certificates/{certificate}/download-public', [CertificateTemplateController::class, 'downloadCertificatePublic'])->where('certificate', '[0-9]+');
+
+// Debug route - list all certificates
+Route::get('certificates/debug/list', function() {
+    $certificates = \App\Models\Certificate::with(['participant', 'event', 'template'])->get();
+    return response()->json([
+        'success' => true,
+        'total' => $certificates->count(),
+        'data' => $certificates->map(function($cert) {
+            return [
+                'id' => $cert->id,
+                'certificate_number' => $cert->certificate_number,
+                'participant_name' => $cert->participant ? $cert->participant->name : 'Unknown',
+                'event_title' => $cert->event ? $cert->event->title : 'Unknown',
+                'file_path' => $cert->file_path
+            ];
+        })
+    ]);
+});
 
 
 /*
@@ -60,7 +78,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('user', [AuthController::class, 'user']);
 
     // Admin Events Dashboard
-    Route::get('admin/events', [EventController::class, 'index']);
+    Route::get('admin/events', [EventController::class, 'adminIndex']);
 
     // Users (Admin CRUD)
     Route::get('users', [UserController::class, 'index']);
@@ -84,9 +102,11 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Attendance (Admin only)
     Route::get('events/{event}/attendance', [AttendanceController::class, 'list']);
+    Route::get('events/{eventId}/attendance/export', [AttendanceController::class, 'exportExcel']);
 
     // Materials
     Route::post('events/{eventId}/materials', [MaterialController::class, 'store']);
+    Route::put('materials/{material}', [MaterialController::class, 'update']);
     Route::delete('materials/{material}', [MaterialController::class, 'destroy']);
     
     // Admin specific routes
@@ -95,11 +115,13 @@ Route::middleware('auth:sanctum')->group(function () {
     });
     Route::get('admin/events/{eventId}/attendance-pin', [AttendanceController::class, 'getPin']);
     Route::post('admin/events/{eventId}/generate-pin', [AttendanceController::class, 'generatePin']);
+    Route::put('admin/events/{eventId}/attendance-pin', [AttendanceController::class, 'updatePin']);
     Route::post('admin/events/{eventId}/thumbnail', [EventController::class, 'uploadThumbnail']);
 
     // Certificates
     Route::post('participants/{participant}/certificate', [CertificateController::class, 'generate']);
     Route::get('certificates/{certificate}/download', [CertificateController::class, 'download']);
+    Route::post('events/{eventId}/certificates/generate-all', [CertificateController::class, 'generateAll']);
 
     // Certificate Templates
     Route::get('certificate-templates', [CertificateTemplateController::class, 'index']);
@@ -108,9 +130,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('certificate-templates/{template}', [CertificateTemplateController::class, 'destroy']);
     Route::post('certificate-templates/{template}/generate', [CertificateTemplateController::class, 'generateCertificates']);
     Route::get('events/{eventId}/certificates', [CertificateTemplateController::class, 'getCertificates']);
+    Route::post('events/{eventId}/certificates/generate-all', [CertificateTemplateController::class, 'generateAllCertificates']);
     Route::get('certificates/{certificate}/download', [CertificateTemplateController::class, 'downloadCertificate']);
 
     // Feedback
-    Route::post('events/{event}/feedback', [FeedbackController::class, 'store']);
-    Route::get('events/{event}/feedback', [FeedbackController::class, 'index']);
+    Route::get('admin/events/{eventId}/feedbacks', [FeedbackController::class, 'index']);
 });
+
+// Public Feedback (no auth required)
+Route::post('events/{event}/feedback', [FeedbackController::class, 'store']);

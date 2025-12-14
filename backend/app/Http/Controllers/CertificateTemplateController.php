@@ -235,9 +235,25 @@ class CertificateTemplateController extends Controller
     public function viewCertificate($certificateId)
     {
         try {
-            $certificate = Certificate::with(['participant', 'event', 'template'])->findOrFail($certificateId);
+            // Validate certificate ID
+            if (!$certificateId || !is_numeric($certificateId)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid certificate ID provided'
+                ], 400);
+            }
+
+            $certificate = Certificate::with(['participant', 'event', 'template'])->find($certificateId);
+            
+            if (!$certificate) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Certificate not found'
+                ], 404);
+            }
             
             $certificate->participant_name = $certificate->participant ? $certificate->participant->name : 'Unknown';
+            $certificate->participant_email = $certificate->participant ? $certificate->participant->email : null;
             $certificate->event_title = $certificate->event ? $certificate->event->title : 'Unknown Event';
             $certificate->event_date = $certificate->event ? Carbon::parse($certificate->event->date)->locale('id')->isoFormat('DD MMMM YYYY') : 'Unknown Date';
             $certificate->template_name = $certificate->template ? $certificate->template->template_name : 'Unknown Template';
@@ -247,9 +263,14 @@ class CertificateTemplateController extends Controller
                 'data' => $certificate
             ]);
         } catch (\Exception $e) {
+            \Log::error('Error in viewCertificate: ' . $e->getMessage(), [
+                'certificate_id' => $certificateId,
+                'trace' => $e->getTraceAsString()
+            ]);
+            
             return response()->json([
                 'success' => false,
-                'message' => 'Error: ' . $e->getMessage()
+                'message' => 'Internal server error: ' . $e->getMessage()
             ], 500);
         }
     }
@@ -338,8 +359,8 @@ class CertificateTemplateController extends Controller
         $width = imagesx($image);
         $height = imagesy($image);
         
-        // Calculate font size - balanced and attractive
-        $fontSize = max(36, $width / 25); // Minimum 36px, proportional to image
+        // Calculate font size - larger and more prominent
+        $fontSize = max(48, $width / 18); // Minimum 48px, larger proportional to image
         
         // Try to use DejaVu Serif font for better quality
         $fontPath = public_path('fonts/DejaVuSerif-Bold.ttf');
@@ -371,13 +392,14 @@ class CertificateTemplateController extends Controller
         $nameY = $height * 0.52;
         
         if ($useBuiltInFont) {
-            // Use elegant built-in font with shadow effect
-            $builtInSize = 5;
+            // Use larger built-in font with enhanced shadow effect
+            $builtInSize = 5; // Maximum built-in font size
             $textWidth = strlen($participantName) * imagefontwidth($builtInSize);
             $nameX = ($width - $textWidth) / 2;
             
-            // Add shadow effect
-            imagestring($image, $builtInSize, $nameX + 2, $nameY + 2, strtoupper($participantName), $shadowColor);
+            // Add multiple shadow layers for depth
+            imagestring($image, $builtInSize, $nameX + 3, $nameY + 3, strtoupper($participantName), $shadowColor);
+            imagestring($image, $builtInSize, $nameX + 1, $nameY + 1, strtoupper($participantName), $shadowColor);
             // Main text
             imagestring($image, $builtInSize, $nameX, $nameY, strtoupper($participantName), $textColor);
         } else {
@@ -387,21 +409,19 @@ class CertificateTemplateController extends Controller
             $textHeight = $textBox[1] - $textBox[7];
             $nameX = ($width - $textWidth) / 2;
             
-            // Add elegant underline decoration
-            $underlineY = $nameY + $textHeight + 8;
-            imageline($image, $nameX - 20, $underlineY, $nameX + $textWidth + 20, $underlineY, $textColor);
-            imageline($image, $nameX - 20, $underlineY + 1, $nameX + $textWidth + 20, $underlineY + 1, $textColor);
-            
-            // Add shadow effect for TTF
-            imagettftext($image, $fontSize, 0, $nameX + 2, $nameY + 2, $shadowColor, $fontPath, strtoupper($participantName));
+            // Add enhanced shadow effect for TTF
+            imagettftext($image, $fontSize, 0, $nameX + 3, $nameY + 3, $shadowColor, $fontPath, strtoupper($participantName));
+            imagettftext($image, $fontSize, 0, $nameX + 1, $nameY + 1, $shadowColor, $fontPath, strtoupper($participantName));
             
             // Add the participant name with TTF font (main text)
             imagettftext($image, $fontSize, 0, $nameX, $nameY, $textColor, $fontPath, strtoupper($participantName));
             
-            // Add elegant underline decoration
-            $underlineY = $nameY + 8;
-            imageline($image, $nameX - 20, $underlineY, $nameX + $textWidth + 20, $underlineY, $textColor);
-            imageline($image, $nameX - 20, $underlineY + 1, $nameX + $textWidth + 20, $underlineY + 1, $textColor);
+            // Add elegant underline decoration with better spacing
+            $underlineY = $nameY + $textHeight + 12;
+            $underlineWidth = 3;
+            for ($i = 0; $i < $underlineWidth; $i++) {
+                imageline($image, $nameX - 30, $underlineY + $i, $nameX + $textWidth + 30, $underlineY + $i, $textColor);
+            }
         }
         
         // Save the image
@@ -461,6 +481,75 @@ class CertificateTemplateController extends Controller
         imagestring($image, $fontSize, $x, $y, $text, $color);
     }
     
+    public function generateAllCertificates($eventId)
+    {
+        $event = Event::findOrFail($eventId);
+        
+        // Get the latest template for this event
+        $template = CertificateTemplate::where('event_id', $eventId)->latest()->first();
+        
+        if (!$template) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Template sertifikat belum diupload untuk event ini'
+            ], 400);
+        }
+        
+        // Get participants who attended the event
+        $participants = Participant::where('event_id', $eventId)
+            ->whereHas('attendances')
+            ->get();
+        
+        if ($participants->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Tidak ada peserta yang hadir untuk event ini'
+            ], 400);
+        }
+        
+        $generatedCount = 0;
+        
+        foreach ($participants as $participant) {
+            // Check if certificate already exists
+            $existingCertificate = Certificate::where('participant_id', $participant->id)
+                ->where('template_id', $template->id)
+                ->first();
+                
+            if (!$existingCertificate) {
+                // Generate certificate number
+                $certificateNumber = 'SIMATRO-' . strtoupper(substr($event->title, 0, 3)) . '-' . 
+                                   date('Y') . '-' . str_pad($participant->id, 4, '0', STR_PAD_LEFT);
+                
+                // Create personalized certificate file
+                $personalizedPath = $this->generatePersonalizedCertificate(
+                    $template->file_path,
+                    $participant->name,
+                    $event->title,
+                    Carbon::parse($event->date)->locale('id')->isoFormat('DD MMMM YYYY'),
+                    $certificateNumber
+                );
+                
+                // Create certificate record
+                Certificate::create([
+                    'participant_id' => $participant->id,
+                    'event_id' => $event->id,
+                    'template_id' => $template->id,
+                    'certificate_number' => $certificateNumber,
+                    'file_path' => $personalizedPath
+                ]);
+                
+                $generatedCount++;
+            }
+        }
+        
+        return response()->json([
+            'success' => true,
+            'message' => "Berhasil generate {$generatedCount} sertifikat untuk peserta yang hadir",
+            'generated_count' => $generatedCount,
+            'total_participants' => $participants->count()
+        ]);
+    }
+
     private function addCenteredTextTTF($image, $text, $imageWidth, $y, $color, $fontSize, $fontPath)
     {
         // Calculate text dimensions

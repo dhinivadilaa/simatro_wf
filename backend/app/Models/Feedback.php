@@ -2,26 +2,21 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 
 class Feedback extends Model
 {
     use HasFactory;
-    
+
     protected $table = 'feedbacks';
-
+    
     protected $fillable = [
-        'participant_id',
         'event_id',
+        'participant_email',
         'rating',
-        'comment',
+        'comments'
     ];
-
-    public function participant()
-    {
-        return $this->belongsTo(Participant::class);
-    }
 
     public function event()
     {

@@ -80,6 +80,38 @@ class MaterialController extends Controller
         ]);
     }
 
+    public function update(Request $request, Material $material)
+    {
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'file' => 'nullable|file|mimes:pdf,ppt,pptx,doc,docx|max:10240'
+        ]);
+
+        $material->title = $request->title;
+
+        // If new file is uploaded
+        if ($request->hasFile('file')) {
+            // Delete old file
+            if (Storage::disk('public')->exists($material->file_path)) {
+                Storage::disk('public')->delete($material->file_path);
+            }
+
+            // Store new file
+            $file = $request->file('file');
+            $path = $file->store('materials', 'public');
+            $material->file_path = $path;
+            $material->filename = $file->getClientOriginalName();
+        }
+
+        $material->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Material berhasil diperbarui',
+            'data' => $material
+        ]);
+    }
+
     public function destroy(Material $material)
     {
         // Delete file from storage

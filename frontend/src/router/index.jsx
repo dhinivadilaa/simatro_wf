@@ -8,8 +8,10 @@ import LoginAdmin from "../pages/Admin/LoginAdmin";
 import DashboardAdmin from "../pages/Admin/DashboardAdmin";
 import CreateEvent from "../pages/Admin/CreateEvent";
 import EventManagement from "../pages/Admin/EventManagement";
+import ParticipantManagement from "../pages/Admin/ParticipantManagement";
 import CertificateTemplate from "../pages/Admin/CertificateTemplate";
 import CertificatePage from "../pages/Certificate/CertificatePage";
+import CertificateList from "../pages/Certificate/CertificateList";
 import Riwayat from "../pages/Riwayat/Riwayat";
 import StatusPage from "../pages/Status/StatusPage";
 import ErrorBoundary from "../components/ErrorBoundary";
@@ -49,13 +51,20 @@ export default function Router() {
                 <Route path="/admin/events/new" element={<CreateEvent />} />
 
                 {/* Halaman Kelola Acara */}
+                <Route path="/admin/events/:eventId" element={<EventManagement />} />
                 <Route path="/admin/events/:eventId/manage" element={<EventManagement />} />
+
+                {/* Halaman Kelola Peserta & Sertifikat */}
+                <Route path="/admin/events/:eventId/participants" element={<ParticipantManagement />} />
 
                 {/* Halaman Template Sertifikat */}
                 <Route path="/admin/events/:eventId/certificate-template" element={<CertificateTemplate />} />
                 
                 {/* Halaman Sertifikat Peserta */}
                 <Route path="/certificate/:certificateId" element={<CertificatePage />} />
+                
+                {/* Daftar Sertifikat (Debug) */}
+                <Route path="/certificates" element={<CertificateList />} />
 
                 {/* Tambahkan rute admin lainnya di sini */}
 

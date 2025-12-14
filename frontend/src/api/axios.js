@@ -8,11 +8,21 @@ const api = axios.create({
   withCredentials: true, // keep for Sanctum/cookie auth if used
 });
 
+// Import auth utilities (dynamic import to avoid circular dependency)
+let authUtils = null;
+try {
+  import('../utils/auth.js').then(module => {
+    authUtils = module;
+  });
+} catch (error) {
+  console.warn('Auth utils not available:', error);
+}
+
 // Request interceptor to add auth token
 api.interceptors.request.use(
   (config) => {
-    // Only add token for admin routes
-    if (config.url.includes('/admin/') || window.location.pathname.startsWith('/admin')) {
+    // Add token for all requests when on admin pages
+    if (window.location.pathname.startsWith('/admin')) {
       const token = localStorage.getItem("adminAuthToken");
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
@@ -25,19 +35,25 @@ api.interceptors.request.use(
   }
 );
 
-// Response interceptor to handle auth errors
-api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response && error.response.status === 401) {
-      // Only redirect to admin login if we're on admin pages
-      if (window.location.pathname.startsWith('/admin')) {
-        localStorage.removeItem("adminAuthToken");
-        window.location.href = "/admin/login";
-      }
-    }
-    return Promise.reject(error);
+// Debounce redirect to prevent multiple redirects
+let redirectTimeout = null;
+let redirectInProgress = false;
+
+// Response interceptor - DISABLED to prevent redirect loops
+// api.interceptors.response.use(
+//   (response) => response,
+//   (error) => {
+//     return Promise.reject(error);
+//   }
+// );
+
+// Export function to clear redirect timeout (useful for cleanup)
+export const clearRedirectTimeout = () => {
+  if (redirectTimeout) {
+    clearTimeout(redirectTimeout);
+    redirectTimeout = null;
   }
-);
+  redirectInProgress = false;
+};
 
 export default api;

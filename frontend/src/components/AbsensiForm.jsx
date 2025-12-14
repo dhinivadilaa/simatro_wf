@@ -4,6 +4,7 @@ import api from '../api/axios';
 export default function AbsensiForm({ eventId }) {
     const [email, setEmail] = useState('');
     const [pin, setPin] = useState('');
+    const [proofPhoto, setProofPhoto] = useState(null);
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState('');
     const [messageType, setMessageType] = useState('');
@@ -21,16 +22,23 @@ export default function AbsensiForm({ eventId }) {
         setMessage('');
 
         try {
-            const response = await api.post('/attendance/check', {
-                event_id: eventId,
-                email: email,
-                pin: pin
+            const formData = new FormData();
+            formData.append('event_id', eventId);
+            formData.append('email', email);
+            formData.append('pin', pin);
+            if (proofPhoto) {
+                formData.append('proof_photo', proofPhoto);
+            }
+
+            const response = await api.post('/attendance/check', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
             });
 
             setMessage('Absensi berhasil dicatat! ✅');
             setMessageType('success');
             setEmail('');
             setPin('');
+            setProofPhoto(null);
         } catch (error) {
             const errorMsg = error.response?.data?.error || 'Gagal melakukan absensi';
             setMessage(errorMsg);
@@ -70,6 +78,20 @@ export default function AbsensiForm({ eventId }) {
                         disabled={loading}
                     />
                 </div>
+            </div>
+
+            <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Bukti Foto di Tempat (Opsional)
+                </label>
+                <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => setProofPhoto(e.target.files[0])}
+                    className="w-full border rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    disabled={loading}
+                />
+                <p className="text-xs text-gray-500 mt-1">Upload foto sebagai bukti kehadiran di tempat acara</p>
             </div>
 
             {message && (

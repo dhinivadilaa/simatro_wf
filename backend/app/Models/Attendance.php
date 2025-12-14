@@ -14,6 +14,7 @@ class Attendance extends Model
         'event_id',
         'check_in_time',
         'check_in_method',
+        'proof_photo',
     ];
 
     protected $dates = ['check_in_time'];

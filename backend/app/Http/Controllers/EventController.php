@@ -16,6 +16,24 @@ class EventController extends Controller
             'certificates',
             'materials'
         ])
+        ->where('status', 'published')
+        ->orderBy('created_at', 'desc')
+        ->get();
+            
+        return response()->json([
+            'success' => true,
+            'data' => $events
+        ]);
+    }
+
+    public function adminIndex()
+    {
+        $events = Event::withCount([
+            'participants',
+            'attendances', 
+            'certificates',
+            'materials'
+        ])
         ->orderBy('created_at', 'desc')
         ->get();
             
@@ -120,10 +138,24 @@ class EventController extends Controller
 
     public function destroy(Event $event)
     {
-        $event->delete();
+        try {
+            // Delete related files first
+            if ($event->thumbnail && Storage::disk('public')->exists($event->thumbnail)) {
+                Storage::disk('public')->delete($event->thumbnail);
+            }
+            
+            // Delete the event (cascade will handle related records)
+            $event->delete();
 
-        return response()->json([
-            'message' => 'Event deleted'
-        ]);
+            return response()->json([
+                'success' => true,
+                'message' => 'Event deleted successfully'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to delete event: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }

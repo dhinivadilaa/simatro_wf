@@ -20,8 +20,12 @@ const EventCardAdmin = ({ event, onDelete }) => {
                     </span>
                     <h3 className="text-lg font-bold text-gray-900">{event.title}</h3>
                 </div>
-                <span className="bg-green-100 text-green-700 px-3 py-1 rounded text-xs font-semibold">
-                    Aktif & Publik
+                <span className={`px-3 py-1 rounded text-xs font-semibold ${
+                    event.status === 'published' 
+                        ? 'bg-green-100 text-green-700' 
+                        : 'bg-yellow-100 text-yellow-700'
+                }`}>
+                    {event.status === 'published' ? '✅ Published' : '📝 Draft'}
                 </span>
             </div>
 

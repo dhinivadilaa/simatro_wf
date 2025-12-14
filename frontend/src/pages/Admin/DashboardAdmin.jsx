@@ -25,7 +25,7 @@ const EventCardAdmin = ({ event, onDelete }) => {
                         ? 'bg-green-100 text-green-700' 
                         : 'bg-yellow-100 text-yellow-700'
                 }`}>
-                    {event.status === 'published' ? '✅ Published' : '📝 Draft'}
+                    {event.status === 'published' ? 'Published' : 'Draft'}
                 </span>
             </div>
 

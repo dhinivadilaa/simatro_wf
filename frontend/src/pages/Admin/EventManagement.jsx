@@ -14,6 +14,7 @@ function FeedbackContent({ eventId }) {
 
     useEffect(() => {
         fetchFeedbacks();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [eventId]);
 
     const fetchFeedbacks = async () => {
@@ -22,19 +23,20 @@ function FeedbackContent({ eventId }) {
             const response = await api.get(`/admin/events/${eventId}/feedbacks`);
             const feedbackData = response.data.data || [];
             setFeedbacks(feedbackData);
-            
+
             const stats = {
                 totalResponses: feedbackData.length,
-                averageRating: feedbackData.length > 0 ? 
+                averageRating: feedbackData.length > 0 ?
                     (feedbackData.reduce((sum, f) => sum + f.rating, 0) / feedbackData.length).toFixed(1) : 0,
                 ratingDistribution: {
                     1: feedbackData.filter(f => f.rating === 1).length,
                     2: feedbackData.filter(f => f.rating === 2).length,
                     3: feedbackData.filter(f => f.rating === 3).length,
                     4: feedbackData.filter(f => f.rating === 4).length,
-                    5: feedbackData.filter(f => f.rating === 5).length
+                    5: feedbackData.filter(f => f.rating === 5).length,
                 }
             };
+
             setFeedbackStats(stats);
         } catch (error) {
             console.error("Error fetching feedbacks:", error);
@@ -53,91 +55,66 @@ function FeedbackContent({ eventId }) {
     }
 
     return (
-        <div>
-            <h3 className="text-lg font-bold text-gray-900 mb-6">Feedback & Evaluasi Acara</h3>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 text-center">
-                    <div className="text-3xl font-bold text-blue-600">{feedbackStats.totalResponses || 0}</div>
-                    <p className="text-sm text-gray-600 mt-1">Total Feedback</p>
-                </div>
-                <div className="bg-green-50 border border-green-200 rounded-lg p-6 text-center">
-                    <div className="text-3xl font-bold text-green-600">{feedbackStats.averageRating || 0}/5</div>
-                    <p className="text-sm text-gray-600 mt-1">Rating Rata-rata</p>
-                </div>
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center">
-                    <div className="text-3xl font-bold text-yellow-600">{feedbacks.filter(f => f.comments).length}</div>
-                    <p className="text-sm text-gray-600 mt-1">Komentar Tertulis</p>
-                </div>
-            </div>
+        <div className="bg-white p-6 rounded-lg shadow-md mb-8">
+            <h2 className="text-lg font-semibold text-gray-800 mb-4">Analisis Feedback</h2>
+            <p className="text-sm text-gray-600 mb-6">
+                Rata-rata Skor Feedback: <span className="font-semibold text-blue-600">{feedbackStats.averageRating || 0}/5.0</span>
+                (Total Responden: {feedbackStats.totalResponses || 0})
+            </p>
 
-            <div className="bg-white p-6 rounded-lg shadow-md mb-8">
-                <h4 className="text-md font-semibold text-gray-800 mb-6">Distribusi Rating</h4>
-                <div className="space-y-4">
-                    {[5, 4, 3, 2, 1].map((rating) => {
-                        const count = feedbackStats.ratingDistribution?.[rating] || 0;
-                        const percentage = feedbackStats.totalResponses > 0 ? (count / feedbackStats.totalResponses) * 100 : 0;
-                        const labels = {
-                            5: "⭐⭐⭐⭐⭐ Sangat Baik",
-                            4: "⭐⭐⭐⭐ Baik",
-                            3: "⭐⭐⭐ Cukup",
-                            2: "⭐⭐ Kurang",
-                            1: "⭐ Sangat Kurang"
-                        };
-                        const colors = {
-                            5: "bg-green-500",
-                            4: "bg-blue-500",
-                            3: "bg-yellow-500",
-                            2: "bg-orange-500",
-                            1: "bg-red-500"
-                        };
-                        
-                        return (
-                            <div key={rating} className="flex items-center gap-4">
-                                <div className="w-40 text-sm font-medium text-gray-700">{labels[rating]}</div>
-                                <div className="flex-1 bg-gray-200 rounded-full h-3">
-                                    <div 
-                                        className={`h-3 rounded-full ${colors[rating]} transition-all duration-300`}
+            <div className="space-y-4">
+                {[1, 2, 3, 4, 5].map((rating) => {
+                    const count = feedbackStats.ratingDistribution?.[rating] || 0;
+                    const percentage = feedbackStats.totalResponses > 0 ? (count / feedbackStats.totalResponses) * 100 : 0;
+                    const labels = {
+                        1: "1 - Sangat Kurang",
+                        2: "2 - Kurang",
+                        3: "3 - Cukup",
+                        4: "4 - Baik",
+                        5: "5 - Sangat Baik"
+                    };
+                    const colors = {
+                        1: "bg-red-500",
+                        2: "bg-orange-500",
+                        3: "bg-yellow-500",
+                        4: "bg-blue-500",
+                        5: "bg-green-500"
+                    };
+
+                    return (
+                        <div key={rating}>
+                            <div className="flex justify-between items-center text-sm">
+                                <span className="font-medium text-gray-700 w-32">{labels[rating]}</span>
+                                <div className="flex-grow bg-gray-200 rounded-full h-2.5 mx-4">
+                                    <div
+                                        className={`h-2.5 rounded-full ${colors[rating]}`}
                                         style={{ width: `${percentage}%` }}
                                     ></div>
                                 </div>
-                                <div className="w-20 text-sm font-semibold text-gray-800 text-right">
-                                    {count} ({percentage.toFixed(1)}%)
-                                </div>
+                                <span className="font-semibold text-gray-800 w-16 text-right">{count} ({percentage.toFixed(1)}%)</span>
                             </div>
-                        );
-                    })}
-                </div>
+                        </div>
+                    );
+                })}
             </div>
-                
-            <div className="bg-white p-6 rounded-lg shadow-md">
-                <h4 className="text-md font-semibold text-gray-800 mb-4">Komentar & Saran</h4>
-                {feedbacks.filter(f => f.comments).length === 0 ? (
-                    <div className="text-center py-8 text-gray-500">
-                        <div className="text-4xl mb-2">💬</div>
-                        <p>Belum ada komentar dari peserta</p>
-                    </div>
-                ) : (
-                    <div className="space-y-4 max-h-96 overflow-y-auto">
-                        {feedbacks.filter(f => f.comments).map((feedback, index) => (
-                            <div key={index} className="bg-gray-50 p-4 rounded-lg border-l-4 border-blue-500">
-                                <div className="flex justify-between items-start mb-2">
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-sm font-medium text-gray-600">{feedback.participant_email}</span>
-                                        <div className="flex items-center gap-1">
-                                            {[...Array(5)].map((_, i) => (
-                                                <span key={i} className={`text-sm ${i < feedback.rating ? 'text-yellow-400' : 'text-gray-300'}`}>⭐</span>
-                                            ))}
-                                        </div>
-                                    </div>
-                                    <span className="text-xs text-gray-400">
-                                        {new Date(feedback.created_at).toLocaleDateString('id-ID')}
-                                    </span>
-                                </div>
-                                <p className="text-gray-700 text-sm leading-relaxed">"{feedback.comments}"</p>
+
+            <h3 className="text-md font-semibold text-gray-800 mt-8 mb-4 border-t pt-4">Saran & Masukan Terbuka</h3>
+            <div className="space-y-3 max-h-60 overflow-y-auto">
+                {feedbacks.filter(f => f.comments).map((feedback, index) => (
+                    <div key={index} className="bg-gray-50 p-3 rounded border-l-4 border-blue-500">
+                        <div className="flex justify-between items-start mb-2">
+                            <div className="flex items-center gap-2">
+                                <span className="text-sm font-medium text-gray-600">{feedback.participant_email}</span>
                             </div>
-                        ))}
+                            <span className="text-xs text-gray-400">{new Date(feedback.created_at).toLocaleDateString('id-ID')}</span>
+                        </div>
+                        <p className="text-sm text-gray-700">"{feedback.comments}"</p>
+                        <p className="text-xs text-gray-500 mt-1">Rating: {feedback.rating}/5</p>
                     </div>
+                ))}
+
+                {feedbacks.filter(f => f.comments).length === 0 && (
+                    <p className="text-gray-500 text-sm">Belum ada saran atau masukan.</p>
                 )}
             </div>
         </div>
@@ -334,13 +311,13 @@ function ParticipantManagementContent({ eventId, event, participants, attendance
                         onClick={() => setShowTemplateUpload(true)}
                         className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
                     >
-                        📄 Upload Template
+                    Upload Template
                     </button>
                     <button 
                         onClick={generateCertificatesForAttendees}
                         className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors"
                     >
-                        🎓 Generate Sertifikat Peserta Hadir
+                    Generate Sertifikat Peserta Hadir
                     </button>
                 </div>
             </div>
@@ -352,7 +329,7 @@ function ParticipantManagementContent({ eventId, event, participants, attendance
                         onClick={() => exportToExcel()}
                         className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors flex items-center gap-2"
                     >
-                        📊 Export Excel
+                    Export Excel
                     </button>
                 </div>
                 <div className="overflow-x-auto">
@@ -390,7 +367,7 @@ function ParticipantManagementContent({ eventId, event, participants, attendance
                                                 onClick={() => viewProofPhoto(participant.attendances[0].proof_photo)}
                                                 className="text-blue-600 hover:text-blue-800 underline"
                                             >
-                                                📷 Lihat Foto
+                                            Lihat Foto
                                             </button>
                                         ) : (
                                             <span className="text-gray-500">Tidak ada</span>
@@ -413,7 +390,6 @@ function ParticipantManagementContent({ eventId, event, participants, attendance
                 <h2 className="text-lg font-semibold text-gray-800 mb-4">Template Sertifikat</h2>
                 {certificateTemplates.length === 0 ? (
                     <div className="text-center py-8 text-gray-500">
-                        <div className="text-4xl mb-2">📄</div>
                         <p>Belum ada template sertifikat yang diupload</p>
                     </div>
                 ) : (
@@ -442,7 +418,7 @@ function ParticipantManagementContent({ eventId, event, participants, attendance
                                     onClick={() => showTemplatePreviewModal(template)}
                                     className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-3 rounded text-sm transition"
                                 >
-                                    👁️ Lihat Preview
+                                Lihat Preview
                                 </button>
                             </div>
                         ))}
@@ -497,6 +473,12 @@ function ParticipantManagementContent({ eventId, event, participants, attendance
                 <div className="space-y-3 max-h-60 overflow-y-auto">
                     {feedbacks.filter(f => f.comments).map((feedback, index) => (
                         <div key={index} className="bg-gray-50 p-3 rounded border-l-4 border-blue-500">
+                            <div className="flex justify-between items-start mb-2">
+                                <div className="flex items-center gap-2">
+                                    <span className="text-sm font-medium text-gray-600">{feedback.participant_email}</span>
+                                </div>
+                                <span className="text-xs text-gray-400">{new Date(feedback.created_at).toLocaleDateString('id-ID')}</span>
+                            </div>
                             <p className="text-sm text-gray-700">"{feedback.comments}"</p>
                             <p className="text-xs text-gray-500 mt-1">Rating: {feedback.rating}/5</p>
                         </div>
@@ -1032,6 +1014,20 @@ export default function EventManagement() {
         );
     }
 
+if (error || !event) {
+        return (
+            <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+                <div className="text-center">
+                    <div className="text-red-500 text-4xl mb-4">⚠️</div>
+                    <p className="text-gray-600 mb-4">{error || 'Acara tidak ditemukan'}</p>
+                    <Link to="/admin/dashboard" className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 inline-block">
+                        Kembali ke Dashboard
+                    </Link>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="min-h-screen bg-gray-100 flex flex-col">
             {/* Header Navigation */}
@@ -1061,6 +1057,22 @@ export default function EventManagement() {
                 </div>
             </header>
 
+                {/* START REVISI: Tombol Kembali di atas card pertama (Layout Adjusted) */}
+                <div className="mb-4 mt-4 flex justify-start items-center pl-6 md:pl-12">
+                    <Link
+                        to="/admin/dashboard"
+                        aria-label="Kembali ke Dashboard Acara"
+                        // Styling disesuaikan agar terlihat lebih proporsional dan tidak terlalu mepet
+                        className="inline-flex items-center gap-2 text-md font-semibold text-gray-800 hover:text-blue-600 transition-colors"
+                    >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                        </svg>
+                        Kembali ke Dashboard Acara
+                    </Link>
+                </div>
+                {/* END REVISI */}
+
             <main className="flex-1 px-6 md:px-12 py-8">
                 {/* Event Header */}
                 <div className="bg-white rounded-lg shadow-md overflow-hidden mb-6">
@@ -1081,7 +1093,6 @@ export default function EventManagement() {
                         ) : null}
                         <div className={`flex items-center justify-center h-full text-white ${event.thumbnail ? 'hidden' : 'flex'}`}>
                             <div className="text-center">
-                                <div className="text-4xl mb-2">🎯</div>
                                 <p className="text-lg font-semibold">{event.title}</p>
                                 <p className="text-sm mt-2 opacity-75">Belum ada thumbnail</p>
                             </div>
@@ -1090,7 +1101,7 @@ export default function EventManagement() {
                             onClick={() => setShowThumbnailUpload(true)}
                             className="absolute top-4 right-4 bg-black bg-opacity-50 text-white px-3 py-1 rounded text-sm hover:bg-opacity-70 transition"
                         >
-                            📷 {event.thumbnail ? 'Ganti' : 'Upload'} Thumbnail
+                        {event.thumbnail ? 'Ganti' : 'Upload'} Thumbnail
                         </button>
                     </div>
                     
@@ -1106,14 +1117,14 @@ export default function EventManagement() {
                                         onClick={publishEvent}
                                         className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold rounded transition"
                                     >
-                                        📢 Publikasikan
+                                    Publikasikan
                                     </button>
                                 ) : (
                                     <button
                                         onClick={unpublishEvent}
                                         className="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white text-sm font-semibold rounded transition"
                                     >
-                                        📝 Jadikan Draft
+                                    Jadikan Draft
                                     </button>
                                 )}
                                 <button
@@ -1124,13 +1135,13 @@ export default function EventManagement() {
                                             : 'bg-blue-600 hover:bg-blue-700'
                                     }`}
                                 >
-                                    {event.registration_open ? '🔒 Tutup Pendaftaran' : '🔓 Buka Pendaftaran'}
+                                    {event.registration_open ? 'Tutup Pendaftaran' : 'Buka Pendaftaran'}
                                 </button>
                                 <button
                                     onClick={deleteEvent}
                                     className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded transition"
                                 >
-                                    🗑️ Hapus Acara
+                                Hapus Acara
                                 </button>
                             </div>
                     </div>
@@ -1142,7 +1153,6 @@ export default function EventManagement() {
                                     ? 'bg-green-100 text-green-700'
                                     : 'bg-yellow-100 text-yellow-700'
                             }`}>
-                                {event.status === 'published' ? '✅' : '📝'}
                                 {event.status === 'published' ? 'Published' : 'Draft'}
                             </span>
                             <span className={`px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1 ${
@@ -1150,7 +1160,6 @@ export default function EventManagement() {
                                     ? 'bg-blue-100 text-blue-700'
                                     : 'bg-red-100 text-red-700'
                             }`}>
-                                {event.registration_open ? '🔓' : '🔒'}
                                 {event.registration_open ? 'Pendaftaran Dibuka' : 'Pendaftaran Ditutup'}
                             </span>
                         </div>
@@ -1165,7 +1174,6 @@ export default function EventManagement() {
                                 { id: 'overview', label: 'Ringkasan' },
                                 { id: 'participants', label: 'Peserta & Sertifikat' },
                                 { id: 'materials', label: 'Materi' },
-                                { id: 'feedback', label: 'Feedback' },
                                 { id: 'settings', label: 'Pengaturan' }
                             ].map(tab => (
                                 <button
@@ -1198,7 +1206,7 @@ export default function EventManagement() {
                                     }}
                                     className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded transition"
                                 >
-                                    🔄 Refresh Data
+                                    Refresh Data
                                 </button>
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -1281,19 +1289,19 @@ export default function EventManagement() {
                                                     onClick={() => downloadMaterial(material.id, material.filename)}
                                                     className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded transition"
                                                 >
-                                                    📥 Download
+                                                Download
                                                 </button>
                                                 <button 
                                                     onClick={() => editMaterial(material)}
                                                     className="px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-sm rounded transition"
                                                 >
-                                                    ✏️ Edit
+                                                Edit
                                                 </button>
                                                 <button 
                                                     onClick={() => showDeleteConfirmation(material)}
                                                     className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-sm rounded transition"
                                                 >
-                                                    🗑️ Hapus
+                                                Hapus
                                                 </button>
                                             </div>
                                         </div>
@@ -1303,9 +1311,7 @@ export default function EventManagement() {
                         </div>
                     )}
 
-                    {activeTab === 'feedback' && (
-                        <FeedbackContent eventId={eventId} />
-                    )}
+                    
 
                     {activeTab === 'settings' && (
                         <div>

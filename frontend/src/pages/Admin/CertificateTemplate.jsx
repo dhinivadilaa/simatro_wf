@@ -208,14 +208,14 @@ export default function CertificateTemplate() {
                             onClick={() => setShowCreateForm(true)}
                             className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded transition"
                         >
-                            📄 Upload Template Sertifikat
+                        Upload Template Sertifikat
                         </button>
                     </div>
 
                     {showCreateForm && (
                         <div className="bg-gray-50 rounded-lg p-6 mb-6">
                             <h3 className="font-semibold mb-4">
-                                Upload Template Sertifikat dari Canva/Desain
+                                Upload Template Sertifikat dari Desain
                             </h3>
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                                 <div className="space-y-4">
@@ -272,7 +272,6 @@ export default function CertificateTemplate() {
                                     <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 bg-white min-h-[300px] flex items-center justify-center">
                                         {template.templateFile ? (
                                             <div className="text-center">
-                                                <div className="text-4xl mb-2">📄</div>
                                                 <p className="font-medium">{template.templateFile.name}</p>
                                                 <p className="text-sm text-gray-500">
                                                     {(template.templateFile.size / 1024 / 1024).toFixed(2)} MB
@@ -280,7 +279,6 @@ export default function CertificateTemplate() {
                                             </div>
                                         ) : (
                                             <div className="text-center text-gray-500">
-                                                <div className="text-4xl mb-2">📎</div>
                                                 <p>Upload file template sertifikat</p>
                                                 <p className="text-sm">dari Canva atau desain lainnya</p>
                                             </div>
@@ -294,7 +292,6 @@ export default function CertificateTemplate() {
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {templates.length === 0 ? (
                             <div className="col-span-full text-center py-12 text-gray-500">
-                                <div className="text-6xl mb-4">📜</div>
                                 <h3 className="text-lg font-medium mb-2">Belum ada template sertifikat</h3>
                                 <p>Buat template pertama Anda untuk mulai mengeluarkan sertifikat!</p>
                             </div>
@@ -318,31 +315,31 @@ export default function CertificateTemplate() {
                                             onClick={() => previewCertificate(tmpl)}
                                             className="text-blue-600 hover:bg-blue-50 px-2 py-1 rounded text-sm font-medium"
                                         >
-                                            👁️ Preview
+                                        Preview
                                         </button>
                                         <button 
                                             onClick={() => generateCertificates(tmpl.id)}
                                             className="text-purple-600 hover:bg-purple-50 px-2 py-1 rounded text-sm font-medium"
                                         >
-                                            🎓 Generate Sertifikat
+                                        Generate Sertifikat
                                         </button>
                                         <button 
                                             onClick={() => viewCertificates()}
                                             className="text-indigo-600 hover:bg-indigo-50 px-2 py-1 rounded text-sm font-medium"
                                         >
-                                            📋 Daftar Peserta
+                                        Daftar Peserta
                                         </button>
                                         <button 
                                             onClick={() => startEdit(tmpl)}
                                             className="text-green-600 hover:bg-green-50 px-2 py-1 rounded text-sm font-medium"
                                         >
-                                            ✏️ Edit
+                                        Edit
                                         </button>
                                         <button 
                                             onClick={() => deleteTemplate(tmpl.id)}
                                             className="text-red-600 hover:bg-red-50 px-2 py-1 rounded text-sm font-medium"
                                         >
-                                            🗑️ Hapus
+                                        Hapus
                                         </button>
                                     </div>
                                 </div>
@@ -379,14 +376,12 @@ export default function CertificateTemplate() {
                                                     }}
                                                 />
                                                 <div className="text-center text-gray-500 hidden">
-                                                    <div className="text-4xl mb-2">📄</div>
                                                     <p>Template tidak dapat ditampilkan</p>
                                                     <p className="text-sm mt-2">Path: {previewTemplate.file_path}</p>
                                                 </div>
                                             </div>
                                         ) : (
                                             <div className="text-center text-gray-500">
-                                                <div className="text-4xl mb-2">📄</div>
                                                 <p>Tidak ada file template</p>
                                             </div>
                                         )}
@@ -421,7 +416,6 @@ export default function CertificateTemplate() {
                                     
                                     {certificates.length === 0 ? (
                                         <div className="text-center py-8 text-gray-500">
-                                            <div className="text-4xl mb-2">🎓</div>
                                             <p>Belum ada sertifikat yang dibuat</p>
                                             <p className="text-sm">Generate sertifikat terlebih dahulu</p>
                                         </div>
@@ -452,7 +446,7 @@ export default function CertificateTemplate() {
                                                                 onClick={() => downloadCertificate(cert.id)}
                                                                 className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm font-medium transition"
                                                             >
-                                                                📥 Download
+                                                            Download
                                                             </button>
                                                         </div>
                                                     </div>

@@ -14,7 +14,40 @@ class CertificateTemplateController extends Controller
 {
     public function index()
     {
-        return CertificateTemplate::all();
+        return CertificateTemplate::with('event')->get();
+    }
+
+    public function preview($templateId)
+    {
+        try {
+            $template = CertificateTemplate::with('event')->findOrFail($templateId);
+            
+            if (!$template->file_path || !Storage::disk('public')->exists($template->file_path)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'File template tidak ditemukan'
+                ], 404);
+            }
+
+            $fileUrl = Storage::disk('public')->url($template->file_path);
+            
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'id' => $template->id,
+                    'template_name' => $template->template_name,
+                    'event_name' => $template->event->name ?? 'Unknown Event',
+                    'file_url' => $fileUrl,
+                    'file_path' => $template->file_path
+                ]
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     public function store(Request $request)
@@ -168,12 +201,23 @@ class CertificateTemplateController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
             
-        // Add formatted data for each certificate
+        // Add formatted data and file URL for preview
         $certificates->each(function ($certificate) {
             $certificate->participant_name = $certificate->participant->name;
+            $certificate->participant_email = $certificate->participant->email;
             $certificate->event_title = $certificate->event->title;
             $certificate->event_date = Carbon::parse($certificate->event->date)->locale('id')->isoFormat('DD MMMM YYYY');
             $certificate->template_name = $certificate->template->template_name;
+            $certificate->has_email = !empty($certificate->participant->email);
+            
+            // Add preview URL for generated certificates
+            if ($certificate->file_path && Storage::disk('public')->exists($certificate->file_path)) {
+                $certificate->preview_url = Storage::disk('public')->url($certificate->file_path);
+                $certificate->file_exists = true;
+            } else {
+                $certificate->preview_url = null;
+                $certificate->file_exists = false;
+            }
         });
             
         return response()->json([
@@ -181,6 +225,8 @@ class CertificateTemplateController extends Controller
             'data' => $certificates
         ]);
     }
+
+
 
     public function downloadCertificate($certificateId)
     {
@@ -257,6 +303,15 @@ class CertificateTemplateController extends Controller
             $certificate->event_title = $certificate->event ? $certificate->event->title : 'Unknown Event';
             $certificate->event_date = $certificate->event ? Carbon::parse($certificate->event->date)->locale('id')->isoFormat('DD MMMM YYYY') : 'Unknown Date';
             $certificate->template_name = $certificate->template ? $certificate->template->template_name : 'Unknown Template';
+            
+            // Add preview URL
+            if ($certificate->file_path && Storage::disk('public')->exists($certificate->file_path)) {
+                $certificate->preview_url = Storage::disk('public')->url($certificate->file_path);
+                $certificate->file_exists = true;
+            } else {
+                $certificate->preview_url = null;
+                $certificate->file_exists = false;
+            }
             
             return response()->json([
                 'success' => true,

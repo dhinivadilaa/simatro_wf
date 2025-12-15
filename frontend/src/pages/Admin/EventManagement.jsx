@@ -202,14 +202,56 @@ function ParticipantManagementContent({ eventId, event, participants, attendance
             return;
         }
 
-        if (window.confirm(`Generate sertifikat untuk ${attendedParticipants.length} peserta yang hadir?`)) {
+        if (window.confirm(`Generate sertifikat untuk ${attendedParticipants.length} peserta yang hadir? Email akan otomatis dikirim.`)) {
             try {
-                await api.post(`/events/${eventId}/certificates/generate-all`);
-                alert(`Sertifikat berhasil dibuat untuk ${attendedParticipants.length} peserta!`);
+                const response = await api.post(`/events/${eventId}/certificates/generate-all`);
+                alert(`Sertifikat berhasil dibuat untuk ${attendedParticipants.length} peserta dan email telah dikirim!`);
                 fetchParticipants();
             } catch (error) {
                 console.error('Error generating certificates:', error);
                 alert('Gagal membuat sertifikat. Pastikan template sudah diupload.');
+            }
+        }
+    };
+
+    const sendBulkCertificateEmail = async () => {
+        if (window.confirm('Kirim email sertifikat ke semua peserta yang memiliki sertifikat?')) {
+            try {
+                const response = await api.post(`/events/${eventId}/certificates/send-bulk-email`);
+                alert(response.data.message);
+            } catch (error) {
+                console.error('Error sending bulk email:', error);
+                const errorMsg = error.response?.data?.message || 'Gagal mengirim email massal';
+                alert(errorMsg);
+            }
+        }
+    };
+
+    const sendIndividualCertificateEmail = async (participantId, participantEmail) => {
+        // Find certificate for this participant
+        const participant = participants.find(p => p.id === participantId);
+        if (!participant || !participant.certificate_issued) {
+            alert('Peserta belum memiliki sertifikat');
+            return;
+        }
+
+        if (window.confirm(`Kirim email sertifikat ke ${participantEmail}?`)) {
+            try {
+                // We need to get certificate ID first
+                const certificatesResponse = await api.get(`/events/${eventId}/certificates`);
+                const certificates = certificatesResponse.data.data || [];
+                const certificate = certificates.find(c => c.participant_id === participantId);
+                
+                if (certificate) {
+                    const response = await api.post(`/certificates/${certificate.id}/send-email`);
+                    alert(response.data.message);
+                } else {
+                    alert('Sertifikat tidak ditemukan');
+                }
+            } catch (error) {
+                console.error('Error sending email:', error);
+                const errorMsg = error.response?.data?.message || 'Gagal mengirim email';
+                alert(errorMsg);
             }
         }
     };
@@ -286,7 +328,7 @@ function ParticipantManagementContent({ eventId, event, participants, attendance
                 <div className="bg-red-100 border border-red-400 text-red-700 p-4 rounded-md col-span-2">
                     <p className="font-semibold">
                         Batas Waktu Absensi Acara: {event.absent_deadline ? 
-                            new Date(event.absent_deadline).toLocaleString('id-ID') : 
+                            `${event.date} ${event.absent_deadline}` : 
                             'Belum ditentukan'
                         }
                     </p>
@@ -308,8 +350,19 @@ function ParticipantManagementContent({ eventId, event, participants, attendance
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
                 <div className="bg-white p-4 rounded-md shadow border-t-4 border-blue-500">
-                    <p className="text-sm text-gray-500">Total Terdaftar</p>
-                    <p className="text-3xl font-bold text-blue-600">{participants.length}</p>
+                    <p className="text-sm text-gray-500">Kuota Peserta</p>
+                    <p className={`text-3xl font-bold ${
+                        event.capacity && participants.length >= event.capacity 
+                            ? 'text-red-600' 
+                            : event.capacity && participants.length >= event.capacity * 0.8 
+                            ? 'text-orange-600' 
+                            : 'text-blue-600'
+                    }`}>
+                        {participants.length} / {event.capacity || '∞'}
+                    </p>
+                    {event.capacity && participants.length >= event.capacity && (
+                        <p className="text-xs text-red-500 font-semibold">PENUH</p>
+                    )}
                 </div>
                 <div className="bg-green-100 p-4 rounded-md shadow border-t-4 border-green-500">
                     <p className="text-sm text-gray-500">Sudah Absen Real-Time</p>
@@ -329,18 +382,30 @@ function ParticipantManagementContent({ eventId, event, participants, attendance
 
             <div className="mb-10">
                 <h2 className="text-lg font-semibold text-gray-800 mb-3">Manajemen Template & Validasi Sertifikat</h2>
-                <div className="flex space-x-3">
+                <div className="flex flex-wrap gap-3">
                     <button 
                         onClick={() => setShowTemplateUpload(true)}
                         className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
                     >
-                        📄 Upload Template
+                        Upload Template
                     </button>
                     <button 
                         onClick={generateCertificatesForAttendees}
                         className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors"
                     >
-                        🎓 Generate Sertifikat Peserta Hadir
+                        Generate Sertifikat + Email
+                    </button>
+                    <button 
+                        onClick={sendBulkCertificateEmail}
+                        className="bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700 transition-colors"
+                    >
+                        Kirim Email Massal
+                    </button>
+                    <button 
+                        onClick={() => navigate(`/admin/events/${eventId}/certificates`)}
+                        className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors"
+                    >
+                        Kelola Sertifikat
                     </button>
                 </div>
             </div>
@@ -352,7 +417,7 @@ function ParticipantManagementContent({ eventId, event, participants, attendance
                         onClick={() => exportToExcel()}
                         className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors flex items-center gap-2"
                     >
-                        📊 Export Excel
+                        Export Excel
                     </button>
                 </div>
                 <div className="overflow-x-auto">
@@ -379,10 +444,21 @@ function ParticipantManagementContent({ eventId, event, participants, attendance
                                         }
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm">
-                                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                            ${participant.certificate_issued ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
-                                            {participant.certificate_issued ? 'Diterbitkan' : 'Belum'}
-                                        </span>
+                                        <div className="flex items-center gap-2">
+                                            <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                                ${participant.certificate_issued ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
+                                                {participant.certificate_issued ? 'Diterbitkan' : 'Belum'}
+                                            </span>
+                                            {participant.certificate_issued && participant.email && (
+                                                <button
+                                                    onClick={() => sendIndividualCertificateEmail(participant.id, participant.email)}
+                                                    className="px-2 py-1 bg-green-600 hover:bg-green-700 text-white text-xs rounded transition"
+                                                    title="Kirim email sertifikat"
+                                                >
+                                                    Kirim Email
+                                                </button>
+                                            )}
+                                        </div>
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm">
                                         {participant.attendances && participant.attendances[0]?.proof_photo ? (
@@ -390,7 +466,7 @@ function ParticipantManagementContent({ eventId, event, participants, attendance
                                                 onClick={() => viewProofPhoto(participant.attendances[0].proof_photo)}
                                                 className="text-blue-600 hover:text-blue-800 underline"
                                             >
-                                                📷 Lihat Foto
+                                                Lihat Foto
                                             </button>
                                         ) : (
                                             <span className="text-gray-500">Tidak ada</span>
@@ -423,16 +499,21 @@ function ParticipantManagementContent({ eventId, event, participants, attendance
                                 <div className="aspect-video bg-gray-100 rounded mb-3 overflow-hidden">
                                     {template.file_path ? (
                                         <img 
-                                            src={`http://localhost:8000/storage/${template.file_path}`}
+                                            key={template.file_path + Date.now()}
+                                            src={`http://localhost:8000/storage/${template.file_path}?v=${Date.now()}`}
                                             alt={template.template_name}
                                             className="w-full h-full object-cover cursor-pointer"
                                             onClick={() => showTemplatePreviewModal(template)}
+                                            onError={(e) => {
+                                                console.error('Template preview failed to load:', e.target.src);
+                                                e.target.style.display = 'none';
+                                                e.target.nextElementSibling.style.display = 'flex';
+                                            }}
                                         />
-                                    ) : (
-                                        <div className="w-full h-full flex items-center justify-center text-gray-400">
-                                            <span>No Preview</span>
-                                        </div>
-                                    )}
+                                    ) : null}
+                                    <div className="w-full h-full flex items-center justify-center text-gray-400" style={{display: template.file_path ? 'none' : 'flex'}}>
+                                        <span>No Preview</span>
+                                    </div>
                                 </div>
                                 <h3 className="font-medium text-gray-900 mb-2">{template.template_name}</h3>
                                 <p className="text-xs text-gray-500 mb-3">
@@ -442,7 +523,7 @@ function ParticipantManagementContent({ eventId, event, participants, attendance
                                     onClick={() => showTemplatePreviewModal(template)}
                                     className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-3 rounded text-sm transition"
                                 >
-                                    👁️ Lihat Preview
+                                    Lihat Preview
                                 </button>
                             </div>
                         ))}
@@ -576,10 +657,18 @@ function ParticipantManagementContent({ eventId, event, participants, attendance
                         </div>
                         <div className="text-center">
                             <img 
-                                src={`http://localhost:8000/storage/${selectedPhoto}`}
+                                src={`http://localhost:8000/storage/${selectedPhoto}?v=${Date.now()}`}
                                 alt="Bukti Absensi"
                                 className="max-w-full max-h-96 mx-auto rounded border"
+                                onError={(e) => {
+                                    console.error('Photo failed to load:', e.target.src);
+                                    e.target.style.display = 'none';
+                                    e.target.nextElementSibling.style.display = 'block';
+                                }}
                             />
+                            <div className="text-center text-gray-500 py-8" style={{display: 'none'}}>
+                                <p>Foto tidak dapat ditampilkan</p>
+                            </div>
                         </div>
                         <div className="mt-4 flex justify-end">
                             <button
@@ -656,6 +745,7 @@ export default function EventManagement() {
             console.log('Fetching event data for ID:', eventId);
             const response = await api.get(`/events/${eventId}`);
             console.log('Event data response:', response.data);
+            console.log('Event thumbnail:', response.data.data?.thumbnail);
             setEvent(response.data.data);
         } catch (error) {
             console.error("Error fetching event:", error);
@@ -715,8 +805,13 @@ export default function EventManagement() {
 
     const fetchCertificateTemplates = async () => {
         try {
-            const response = await api.get(`/events/${eventId}/certificates`);
-            setCertificateTemplates(response.data.data || []);
+            console.log('Fetching templates for event:', eventId);
+            const response = await api.get('/certificate-templates');
+            console.log('All templates response:', response.data);
+            const allTemplates = response.data || [];
+            const eventTemplates = allTemplates.filter(t => t.event_id == eventId);
+            console.log('Filtered templates for event:', eventTemplates);
+            setCertificateTemplates(eventTemplates);
         } catch (error) {
             console.error("Error fetching certificate templates:", error);
         }
@@ -842,19 +937,28 @@ export default function EventManagement() {
         }
         
         try {
+            console.log('Uploading thumbnail for event:', eventId);
             const formData = new FormData();
             formData.append('thumbnail', file);
             
-            await api.post(`/admin/events/${eventId}/thumbnail`, formData, {
+            const response = await api.post(`/admin/events/${eventId}/thumbnail`, formData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
             
+            console.log('Upload response:', response.data);
             alert('Thumbnail berhasil diupload!');
-            fetchEventData();
+            
+            // Update event state immediately
+            if (response.data.data && response.data.data.thumbnail) {
+                setEvent(prev => ({ ...prev, thumbnail: response.data.data.thumbnail }));
+            }
+            
             setShowThumbnailUpload(false);
+            await fetchEventData();
         } catch (error) {
             console.error('Error uploading thumbnail:', error);
-            alert('Gagal mengupload thumbnail');
+            console.error('Error response:', error.response?.data);
+            alert('Gagal mengupload thumbnail: ' + (error.response?.data?.message || error.message));
         }
     };
 
@@ -1068,7 +1172,8 @@ export default function EventManagement() {
                     <div className="relative h-48 bg-gradient-to-r from-blue-500 to-purple-600">
                         {event.thumbnail ? (
                             <img 
-                                src={`http://localhost:8000/storage/${event.thumbnail}?t=${Date.now()}`} 
+                                key={event.thumbnail}
+                                src={`http://localhost:8000/storage/${event.thumbnail}`} 
                                 alt={event.title}
                                 className="w-full h-full object-cover"
                                 onLoad={() => console.log('Thumbnail loaded:', event.thumbnail)}
@@ -1113,7 +1218,7 @@ export default function EventManagement() {
                                         onClick={unpublishEvent}
                                         className="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white text-sm font-semibold rounded transition"
                                     >
-                                        📝 Jadikan Draft
+                                         Jadikan Draft
                                     </button>
                                 )}
                                 <button
@@ -1124,13 +1229,13 @@ export default function EventManagement() {
                                             : 'bg-blue-600 hover:bg-blue-700'
                                     }`}
                                 >
-                                    {event.registration_open ? '🔒 Tutup Pendaftaran' : '🔓 Buka Pendaftaran'}
+                                    {event.registration_open ? ' Tutup Pendaftaran' : ' Buka Pendaftaran'}
                                 </button>
                                 <button
                                     onClick={deleteEvent}
                                     className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded transition"
                                 >
-                                    🗑️ Hapus Acara
+                                    Hapus Acara
                                 </button>
                             </div>
                     </div>
@@ -1142,7 +1247,7 @@ export default function EventManagement() {
                                     ? 'bg-green-100 text-green-700'
                                     : 'bg-yellow-100 text-yellow-700'
                             }`}>
-                                {event.status === 'published' ? '✅' : '📝'}
+                                {event.status === 'published' ? '' : ''}
                                 {event.status === 'published' ? 'Published' : 'Draft'}
                             </span>
                             <span className={`px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1 ${
@@ -1150,7 +1255,7 @@ export default function EventManagement() {
                                     ? 'bg-blue-100 text-blue-700'
                                     : 'bg-red-100 text-red-700'
                             }`}>
-                                {event.registration_open ? '🔓' : '🔒'}
+                                {event.registration_open ? '' : ''}
                                 {event.registration_open ? 'Pendaftaran Dibuka' : 'Pendaftaran Ditutup'}
                             </span>
                         </div>
@@ -1165,7 +1270,7 @@ export default function EventManagement() {
                                 { id: 'overview', label: 'Ringkasan' },
                                 { id: 'participants', label: 'Peserta & Sertifikat' },
                                 { id: 'materials', label: 'Materi' },
-                                { id: 'feedback', label: 'Feedback' },
+
                                 { id: 'settings', label: 'Pengaturan' }
                             ].map(tab => (
                                 <button
@@ -1198,13 +1303,24 @@ export default function EventManagement() {
                                     }}
                                     className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded transition"
                                 >
-                                    🔄 Refresh Data
+                                    Refresh Data
                                 </button>
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                                 <div className="bg-blue-50 border border-blue-200 rounded p-4 text-center">
-                                    <p className="text-sm text-gray-600">Total Peserta</p>
-                                    <p className="text-3xl font-bold text-blue-600">{participants.length}</p>
+                                    <p className="text-sm text-gray-600">Kuota Peserta</p>
+                                    <p className={`text-3xl font-bold ${
+                                        event.capacity && participants.length >= event.capacity 
+                                            ? 'text-red-600' 
+                                            : event.capacity && participants.length >= event.capacity * 0.8 
+                                            ? 'text-orange-600' 
+                                            : 'text-blue-600'
+                                    }`}>
+                                        {participants.length} / {event.capacity || '∞'}
+                                    </p>
+                                    {event.capacity && participants.length >= event.capacity && (
+                                        <p className="text-xs text-red-500 font-semibold">PENUH</p>
+                                    )}
                                 </div>
                                 <div className="bg-green-50 border border-green-200 rounded p-4 text-center">
                                     <p className="text-sm text-gray-600">Hadir</p>
@@ -1281,19 +1397,19 @@ export default function EventManagement() {
                                                     onClick={() => downloadMaterial(material.id, material.filename)}
                                                     className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded transition"
                                                 >
-                                                    📥 Download
+                                                     Download
                                                 </button>
                                                 <button 
                                                     onClick={() => editMaterial(material)}
                                                     className="px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-sm rounded transition"
                                                 >
-                                                    ✏️ Edit
+                                                     Edit
                                                 </button>
                                                 <button 
                                                     onClick={() => showDeleteConfirmation(material)}
                                                     className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-sm rounded transition"
                                                 >
-                                                    🗑️ Hapus
+                                                     Hapus
                                                 </button>
                                             </div>
                                         </div>
@@ -1303,9 +1419,7 @@ export default function EventManagement() {
                         </div>
                     )}
 
-                    {activeTab === 'feedback' && (
-                        <FeedbackContent eventId={eventId} />
-                    )}
+
 
                     {activeTab === 'settings' && (
                         <div>
@@ -1468,15 +1582,20 @@ export default function EventManagement() {
                             <div className="text-center">
                                 {previewTemplate.file_path ? (
                                     <img 
-                                        src={`http://localhost:8000/storage/${previewTemplate.file_path}`}
+                                        key={previewTemplate.file_path + Date.now()}
+                                        src={`http://localhost:8000/storage/${previewTemplate.file_path}?v=${Date.now()}`}
                                         alt={previewTemplate.template_name}
                                         className="max-w-full max-h-[70vh] mx-auto border rounded"
+                                        onError={(e) => {
+                                            console.error('Template modal preview failed to load:', e.target.src);
+                                            e.target.style.display = 'none';
+                                            e.target.nextElementSibling.style.display = 'block';
+                                        }}
                                     />
-                                ) : (
-                                    <div className="py-20 text-gray-500">
-                                        <p>Template tidak dapat ditampilkan</p>
-                                    </div>
-                                )}
+                                ) : null}
+                                <div className="py-20 text-gray-500" style={{display: previewTemplate.file_path ? 'none' : 'block'}}>
+                                    <p>Template tidak dapat ditampilkan</p>
+                                </div>
                             </div>
                             <div className="mt-4 flex justify-end">
                                 <button

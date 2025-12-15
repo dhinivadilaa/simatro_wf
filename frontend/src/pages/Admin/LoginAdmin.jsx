@@ -106,7 +106,7 @@ export default function LoginAdmin() {
 
             <div className="flex-1 flex items-center justify-center px-4 py-8">
                 <div className="bg-white rounded-xl shadow-lg w-full max-w-md p-8">
-                    <h1 className="text-2xl font-bold text-[#0e2a47] text-center mb-4">Login Panitia SIMATRO</h1>
+                    <h1 className="text-2xl font-bold text-[#0e2a47] text-center mb-4">Login Admin SIMATRO</h1>
 
                     {error && (
                         <p className="text-sm text-red-600 bg-red-50 border border-red-200 p-2 rounded mb-4 text-center">{error}</p>
@@ -123,7 +123,7 @@ export default function LoginAdmin() {
                                 name="email"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
-                                placeholder="panitia@simatro.com"
+    
                                 required
                                 disabled={isSubmitting}
                                 className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#0e2a47]"
@@ -138,7 +138,7 @@ export default function LoginAdmin() {
                                 name="password"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
-                                placeholder="123456"
+
                                 required
                                 disabled={isSubmitting}
                                 className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#0e2a47]"

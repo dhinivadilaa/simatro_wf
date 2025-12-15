@@ -178,11 +178,14 @@ export default function StatusPage() {
                     <div style={styles.header}>
                         <span 
                             style={styles.backArrow}
-                            onClick={() => navigate(-1)}
+                            onClick={() => eventId ? navigate(`/events/${eventId}`) : navigate('/')}
                         >
                             ←
                         </span>
-                        <span style={{ fontSize: '16px', color: '#333' }}>
+                        <span 
+                            style={{ fontSize: '16px', color: '#333', cursor: 'pointer' }}
+                            onClick={() => eventId ? navigate(`/events/${eventId}`) : navigate('/')}
+                        >
                             Kembali ke Detail Acara
                         </span>
                     </div>

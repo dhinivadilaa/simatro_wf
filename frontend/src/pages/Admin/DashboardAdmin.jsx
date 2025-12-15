@@ -25,7 +25,7 @@ const EventCardAdmin = ({ event, onDelete }) => {
                         ? 'bg-green-100 text-green-700' 
                         : 'bg-yellow-100 text-yellow-700'
                 }`}>
-                    {event.status === 'published' ? '✅ Published' : '📝 Draft'}
+                    {event.status === 'published' ? ' Published' : ' Draft'}
                 </span>
             </div>
 
@@ -40,8 +40,22 @@ const EventCardAdmin = ({ event, onDelete }) => {
                     <p className="text-red-600 font-semibold">{event.absent_deadline || '-'}</p>
                 </div>
                 <div className="col-span-2 md:col-span-1">
-                    <p className="text-gray-600 font-medium">Peserta</p>
-                    <p className="text-gray-900 font-bold text-lg">{attendedCount} / {totalParticipants}</p>
+                    <p className="text-gray-600 font-medium">Kuota Peserta</p>
+                    <p className={`font-bold text-lg ${
+                        event.capacity && totalParticipants >= event.capacity 
+                            ? 'text-red-600' 
+                            : event.capacity && totalParticipants >= event.capacity * 0.8 
+                            ? 'text-orange-600' 
+                            : 'text-gray-900'
+                    }`}>
+                        {totalParticipants} / {event.capacity || '∞'}
+                        {event.capacity && totalParticipants >= event.capacity && (
+                            <span className="text-xs ml-1 text-red-500">PENUH</span>
+                        )}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                        {attendedCount} hadir
+                    </p>
                 </div>
             </div>
 

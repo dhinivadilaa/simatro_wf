@@ -120,11 +120,17 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Certificates
     Route::post('participants/{participant}/certificate', [CertificateController::class, 'generate']);
+    Route::post('participants/{participantId}/certificate/generate', [CertificateController::class, 'generateSingle']);
     Route::get('certificates/{certificate}/download', [CertificateController::class, 'download']);
     Route::post('events/{eventId}/certificates/generate-all', [CertificateController::class, 'generateAll']);
+    
+    // Email Certificates
+    Route::post('certificates/{certificateId}/send-email', [CertificateController::class, 'sendEmail']);
+    Route::post('events/{eventId}/certificates/send-bulk-email', [CertificateController::class, 'sendBulkEmail']);
 
     // Certificate Templates
     Route::get('certificate-templates', [CertificateTemplateController::class, 'index']);
+    Route::get('certificate-templates/{templateId}/preview', [CertificateTemplateController::class, 'preview']);
     Route::post('certificate-templates', [CertificateTemplateController::class, 'store']);
     Route::put('certificate-templates/{template}', [CertificateTemplateController::class, 'update']);
     Route::delete('certificate-templates/{template}', [CertificateTemplateController::class, 'destroy']);
@@ -132,6 +138,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('events/{eventId}/certificates', [CertificateTemplateController::class, 'getCertificates']);
     Route::post('events/{eventId}/certificates/generate-all', [CertificateTemplateController::class, 'generateAllCertificates']);
     Route::get('certificates/{certificate}/download', [CertificateTemplateController::class, 'downloadCertificate']);
+
 
     // Feedback
     Route::get('admin/events/{eventId}/feedbacks', [FeedbackController::class, 'index']);

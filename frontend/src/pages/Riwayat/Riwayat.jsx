@@ -162,7 +162,7 @@ export default function Riwayat() {
             <div className="max-w-4xl mx-auto px-4 py-10">
                 <div className="mb-6">
                     <button onClick={handleBack} className="text-sm text-gray-500 hover:text-gray-700 mb-3">&larr; Kembali ke Detail Acara</button>
-                    <h1 className="text-2xl font-semibold text-gray-900">Dashboard Peserta SIMATRO</h1>
+                    <h1 className="text-2xl font-semibold text-gray-900">Riwayat Event Peserta SIMATRO</h1>
                     {!verified ? (
                         <p className="text-gray-600">Silakan konfirmasi dengan memasukkan email yang Anda gunakan saat mendaftar.</p>
                     ) : (

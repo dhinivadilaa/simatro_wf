@@ -146,7 +146,18 @@ export default function EventDetail() {
 
                         <div className="bg-gray-100 rounded-lg p-4">
                             <div className="text-sm text-gray-600 flex items-center gap-2"><span>👥</span> Kuota Peserta</div>
-                            <p className="font-semibold text-gray-800 mt-1">{event?.registered || 0} / {event?.capacity || 'Unlimited'}</p>
+                            <p className={`font-semibold mt-1 ${
+                                event?.capacity && event?.participants_count >= event?.capacity 
+                                    ? 'text-red-600' 
+                                    : event?.capacity && event?.participants_count >= event?.capacity * 0.8 
+                                    ? 'text-orange-600' 
+                                    : 'text-gray-800'
+                            }`}>
+                                {event?.participants_count || 0} / {event?.capacity || '∞'}
+                                {event?.capacity && event?.participants_count >= event?.capacity && (
+                                    <span className="text-xs ml-2 bg-red-100 text-red-600 px-2 py-1 rounded">PENUH</span>
+                                )}
+                            </p>
                         </div>
                     </div>
 
@@ -183,13 +194,13 @@ export default function EventDetail() {
                                             onClick={() => handlePreviewMaterial(material)}
                                             className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2"
                                         >
-                                            👁 Lihat
+                                             Lihat
                                         </button>
                                         <button
                                             onClick={() => handleDownloadMaterial(material.id, material.filename)}
                                             className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2"
                                         >
-                                            📥 Download
+                                            Download
                                         </button>
                                     </div>
                                 </div>
@@ -204,7 +215,7 @@ export default function EventDetail() {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
                         <div onClick={() => navigate(`/events/${id}/register`)} className="p-4 rounded-xl bg-green-50 border border-green-200 cursor-pointer hover:shadow-md transition-shadow">
                             <h3 className="font-semibold flex items-center gap-2">
-                                📝 Pendaftaran
+                                 Pendaftaran
                             </h3>
                             <p className="text-sm text-gray-600">Jika Berminat, Silahkan Daftar disini</p>
                             <button className="mt-3 w-full bg-green-600 text-white py-2 rounded hover:bg-green-700 transition-colors">Daftar Sekarang</button>
@@ -212,7 +223,7 @@ export default function EventDetail() {
 
                         <div onClick={() => navigate(`/status?eventId=${id}`)} className="p-4 rounded-xl bg-blue-50 border border-blue-200 cursor-pointer hover:shadow-md transition-shadow">
                             <h3 className="font-semibold flex items-center gap-2">
-                                📈 Status & Sertifikat
+                                 Status & Sertifikat
                             </h3>
                             <p className="text-sm text-gray-600">Cek status absensi dan sertifikat</p>
                             <button className="mt-3 w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition-colors">Cek Status</button>
@@ -220,7 +231,7 @@ export default function EventDetail() {
 
                         <div onClick={() => navigate('/riwayat')} className="p-4 rounded-xl bg-yellow-50 border border-yellow-200 cursor-pointer hover:shadow-md transition-shadow">
                             <h3 className="font-semibold flex items-center gap-2">
-                                📅 Riwayat Event
+                                 Riwayat Event
                             </h3>
                             <p className="text-sm text-gray-600">Lihat riwayat dan sertifikat</p>
                             <button className="mt-3 w-full bg-yellow-500 text-white py-2 rounded hover:bg-yellow-600 transition-colors">Lihat Riwayat</button>

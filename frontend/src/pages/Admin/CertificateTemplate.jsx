@@ -170,6 +170,51 @@ export default function CertificateTemplate() {
         }
     };
 
+    const sendCertificateEmail = async (certificateId, participantEmail) => {
+        if (!window.confirm(`Kirim email sertifikat ke ${participantEmail}?`)) {
+            return;
+        }
+        
+        try {
+            const response = await api.post(`/certificates/${certificateId}/send-email`);
+            alert(response.data.message);
+        } catch (error) {
+            console.error('Error sending email:', error);
+            const errorMsg = error.response?.data?.message || 'Gagal mengirim email';
+            alert(errorMsg);
+        }
+    };
+
+    const sendBulkEmail = async () => {
+        if (!window.confirm('Kirim email sertifikat ke semua peserta yang memiliki sertifikat?')) {
+            return;
+        }
+        
+        try {
+            const response = await api.post(`/events/${eventId}/certificates/send-bulk-email`);
+            alert(response.data.message);
+        } catch (error) {
+            console.error('Error sending bulk email:', error);
+            const errorMsg = error.response?.data?.message || 'Gagal mengirim email massal';
+            alert(errorMsg);
+        }
+    };
+
+    const previewTemplateFile = async (templateId) => {
+        try {
+            const response = await api.get(`/certificate-templates/${templateId}/preview`);
+            if (response.data.success) {
+                setPreviewTemplate({
+                    ...response.data.data,
+                    file_url: response.data.data.file_url
+                });
+            }
+        } catch (error) {
+            console.error('Error previewing template:', error);
+            alert('Gagal memuat preview template');
+        }
+    };
+
     if (loading) {
         return (
             <div className="min-h-screen bg-gray-100 flex items-center justify-center">
@@ -315,7 +360,7 @@ export default function CertificateTemplate() {
                                     )}
                                     <div className="flex flex-wrap gap-2">
                                         <button 
-                                            onClick={() => previewCertificate(tmpl)}
+                                            onClick={() => previewTemplateFile(tmpl.id)}
                                             className="text-blue-600 hover:bg-blue-50 px-2 py-1 rounded text-sm font-medium"
                                         >
                                             👁️ Preview
@@ -365,10 +410,10 @@ export default function CertificateTemplate() {
                                         </button>
                                     </div>
                                     <div className="flex justify-center">
-                                        {previewTemplate.file_path ? (
+                                        {previewTemplate.file_url || previewTemplate.file_path ? (
                                             <div className="text-center">
                                                 <img 
-                                                    src={`http://localhost:8000/storage/${previewTemplate.file_path}`}
+                                                    src={previewTemplate.file_url || `http://localhost:8000/storage/${previewTemplate.file_path}`}
                                                     alt={previewTemplate.template_name}
                                                     className="max-w-full max-h-[70vh] object-contain border rounded-lg shadow-lg"
                                                     onLoad={(e) => console.log('Image loaded:', e.target.src)}
@@ -419,6 +464,20 @@ export default function CertificateTemplate() {
                                         </button>
                                     </div>
                                     
+                                    <div className="mb-4 flex justify-between items-center">
+                                        <p className="text-sm text-gray-600">
+                                            Total: {certificates.length} sertifikat
+                                        </p>
+                                        {certificates.length > 0 && (
+                                            <button
+                                                onClick={sendBulkEmail}
+                                                className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded text-sm font-medium transition"
+                                            >
+                                                📧 Kirim Email Semua
+                                            </button>
+                                        )}
+                                    </div>
+                                    
                                     {certificates.length === 0 ? (
                                         <div className="text-center py-8 text-gray-500">
                                             <div className="text-4xl mb-2">🎓</div>
@@ -434,6 +493,12 @@ export default function CertificateTemplate() {
                                                             <h4 className="font-semibold text-lg text-gray-900">{cert.participant_name || cert.participant?.name}</h4>
                                                             <div className="mt-2 space-y-1">
                                                                 <p className="text-sm text-gray-600">
+                                                                    <span className="font-medium">Email:</span> 
+                                                                    <span className={cert.has_email ? 'text-green-600' : 'text-red-600'}>
+                                                                        {cert.participant_email || 'Tidak ada email'}
+                                                                    </span>
+                                                                </p>
+                                                                <p className="text-sm text-gray-600">
                                                                     <span className="font-medium">Event:</span> {cert.event_title || cert.event?.title}
                                                                 </p>
                                                                 <p className="text-sm text-gray-600">
@@ -445,15 +510,36 @@ export default function CertificateTemplate() {
                                                                 <p className="text-xs text-gray-500">
                                                                     Template: {cert.template_name || cert.template?.template_name}
                                                                 </p>
+                                                                {cert.preview_url && (
+                                                                    <p className="text-xs text-blue-600">
+                                                                        ✅ File sertifikat tersedia
+                                                                    </p>
+                                                                )}
                                                             </div>
                                                         </div>
-                                                        <div className="ml-4">
+                                                        <div className="ml-4 flex flex-col gap-2">
+                                                            {cert.preview_url && (
+                                                                <button
+                                                                    onClick={() => window.open(cert.preview_url, '_blank')}
+                                                                    className="px-3 py-1 bg-purple-600 hover:bg-purple-700 text-white rounded text-xs font-medium transition"
+                                                                >
+                                                                    👁️ Preview
+                                                                </button>
+                                                            )}
                                                             <button
                                                                 onClick={() => downloadCertificate(cert.id)}
-                                                                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm font-medium transition"
+                                                                className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-medium transition"
                                                             >
                                                                 📥 Download
                                                             </button>
+                                                            {cert.has_email && (
+                                                                <button
+                                                                    onClick={() => sendCertificateEmail(cert.id, cert.participant_email)}
+                                                                    className="px-3 py-1 bg-green-600 hover:bg-green-700 text-white rounded text-xs font-medium transition"
+                                                                >
+                                                                    📧 Kirim Email
+                                                                </button>
+                                                            )}
                                                         </div>
                                                     </div>
                                                 </div>

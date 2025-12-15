@@ -145,6 +145,7 @@ function FeedbackContent({ eventId }) {
 }
 
 function ParticipantManagementContent({ eventId, event, participants, attendancePin, setAttendancePin, fetchParticipants, certificateTemplates, showTemplatePreviewModal, fetchCertificateTemplates }) {
+    const navigate = useNavigate();
     const [showChangePinDialog, setShowChangePinDialog] = useState(false);
     const [feedbacks, setFeedbacks] = useState([]);
     const [feedbackStats, setFeedbackStats] = useState({});
